@@ -5,7 +5,6 @@ import { faEnvelope, faLock } from '@fortawesome/free-solid-svg-icons'; // Impor
 import './style.css';
 import React from 'react';
 import Link from 'next/link';
-import SignupPage from './Signup';
 export default function LoginPage() {
   const handleSubmit = async (event) => {
     event.preventDefault(); // Prevent default form submission

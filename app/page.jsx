@@ -16,7 +16,7 @@ export default function Home() {
           src="https://s3-alpha-sig.figma.com/img/db24/0331/0f206ef4180701ec963aff336898c1b5?Expires=1743379200&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=eHLNXFgOPNFoQzO9Jn7fiCz0Ta82AV1oiX24lYrV~Q4ImQ0xJ4ceK9I2MSrm4DX~xGQjTv9XCuApbIORdoW4U1DGyCWvXeoN8zkQFGG0HoJznobYJ~34T8QcnkTpdvBEVkJOeTyYSGwiNJ7cXkCLo1T6y19Xf3oHl7IiiK4cW1Vw-Jlh81f99nsWT12wyv9ssRCbjY0YudWTKr4QBT6Xe4FhJRrFZ2Re4opcrZfotpkqkAVmKO7qmitvVtXNiwkgjZx4QdA2kyv-fXDbkd5G-0q-F0wC~zVW0WzsFIwumGe4qTjV6mH5D3UV6ImKceaQ~czJ-4Pvfiv7yUyUe88V7A__"
           style={{ width: "180px", height: "180px" }}
         />
-        <h1 className="text-3xl font-bold animate-fade-in" style={{ fontSize: "40px",fontFamily: "sans-serif" }}>
+        <h1 className="text-gray-700" style={{ fontSize: "40px",fontFamily: "sans-serif" }}>
           Welcome To HexaGrub
         </h1>
         <p className="text-gray-700" style={{ fontSize: "30px" }}>
