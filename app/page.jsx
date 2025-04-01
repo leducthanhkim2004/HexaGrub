@@ -29,24 +29,6 @@ export default function Home() {
 
       {/* Menu Section */}
       <section className="bg-white py-8">
-        <p
-          className="mt-4 px-6 py-2 bg-white text-black border border-black rounded transition-transform transform hover:scale-105 hover:shadow-lg"
-          style={{
-            fontStyle: "normal sans-serif",
-            color: "rgb(14, 13, 13)",
-            borderRadius: "15px",
-          }}
-        >
-          View Our Menu
-        </p>
-
-        <div className="flex justify-center mb-4">
-          <input
-            className="border border-gray-300 rounded px-4 py-2"
-            placeholder="Search..."
-            type="text"
-          />
-        </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 px-4">
           <div className="text-center">
             <img
@@ -56,7 +38,7 @@ export default function Home() {
               style={{ width: "200px", height: "200px" ,}}
             />
             <a
-              href="/htmlFile/appertizer.html"
+              href="/menu/appetizers"
               className="font-bold transition-transform transform hover:scale-105 hover:text-blue-500"
               style={{ fontSize: "20px" }}
             >
@@ -70,13 +52,13 @@ export default function Home() {
               src="https://s3-alpha-sig.figma.com/img/46a1/3461/2b44a397eeced75fe77ba9575b346e5d?Expires=1743379200&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=lbtyZr33mDV0eHUB8V-k7xSayJSX1q6k6S5CK9ie8kbkCRdtPA8RqVV0~J7Vlil39y-IF55TQKEukM~XOsk4ZqEo8YU1BYnn83lIkiqihB5XYjbEi8mGy5zC27RfCxICcD5Huh5yRnCz8vR6X1MAdprGdZUOTTtKURpdR1iNX9~LdmM7~QghSgy7a~A0VFgJxkmC7S6UcE684bw~PYAfUWACoaioJexQH8iz8vFJ1ecW3Rhr-H-6U1Qs36CllEd8DeZB7idoon0BLB1Klp86YO1WqzZP3c5b~5ouBxoEnYYx56CRzS~d3RcVFRWsJjq5ip80MrvrykxSb6v-o5BAuA__"
               style={{ width: "200px", height: "200px" }}
             />
-            <button
-              onClick={() => (window.location.href = "/htmlFile/main.html")}
+            <a
+              href="/menu/main-course"
               className="font-bold transition-transform transform hover:scale-105 hover:text-blue-500"
               style={{ fontSize: "20px" }}
             >
               Main Course
-            </button>
+            </a>
           </div>
           <div className="text-center">
             <img
@@ -85,13 +67,13 @@ export default function Home() {
               src="https://s3-alpha-sig.figma.com/img/da23/3289/90c0cbee16ea42fc48dbeb899c49c3f0?Expires=1743379200&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=TEPJ3czc2T3Ko3~~wGg9kwdBa2dgh~obOVR8voj3qV8SYhMe-wJWbuvAp1AWUIlig6SfWMjd~apExi9TLIlzKm5xeqcmgq2jffJcLHFDb9r6datILgxEhTtbsHmqzH90t6DpTQa-n3ixsJwUjxUvmKwWf1MeLPcWJT0bNyZge2EVdSLki4nNzMJDPIo-mgppJvUbctqlSFrJgEijVW6zGiAe2SD9xNJAnLobSs8nCRI0-qsnwyqxBlVc1Kmq29ertQvKxPn~-53Al1X6dUXqQyx-KgPwu1BENoLb69dea67PPp0AqxW0rRss55nz57EDDCty5bHJTHMkKNK7zKdCIw__"
               style={{ width: "200px", height: "200px" }}
             />
-            <button
-              onClick={() => (window.location.href = "/htmlFile/drink.html")}
+            <a
+              href="/menu/drinks"
               className="font-bold transition-transform transform hover:scale-105 hover:text-blue-500"
               style={{ fontSize: "20px" }}
             >
               Drinks
-            </button>
+            </a>
           </div>
           <div className="text-center">
             <img
@@ -100,13 +82,13 @@ export default function Home() {
               src="https://s3-alpha-sig.figma.com/img/1873/aa31/588c420da0b1e48bf1b00097b3f63f5d?Expires=1743379200&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=DxSLZexx3KpxRfY1ggAdgpeoos0aoRsMctqixepJSN2fSV~K9way3xgbwDKr4sLCarew5lqxuulk7ykceoOSy33q2QnqCDZ0FSTkAWAfk8SYDKN9zQYb~h~sgklSeM6AKB3A27v5DMLTL4mvnVgJL6QxykEnrRB-ByI3WxE77vN1zTe3gd1s-aH3ZbvGwAmLtdvema2SMXt5f3CqbRQD8OMaqEcwPck2XgCUoAZttkKn5eKs2xTqqCPAuze51Vl3MpAt1YN13PAlHoG-aQg6Ghat8pxPpRvamE~9KCDfH7lbITcAzTb5GafxH1t~FkbXEkbh02N5uDwjwGTDHFxeGA__"
               style={{ width: "200px", height: "200px" }}
             />
-            <button
-              onClick={() => (window.location.href = "/htmlFile/dessert.html")}
+            <a
+              href="/menu/desserts"
               className="font-bold transition-transform transform hover:scale-105 hover:text-blue-500"
               style={{ fontSize: "20px" }}
             >
               Dessert
-            </button>
+            </a>
           </div>
         </div>
       </section>

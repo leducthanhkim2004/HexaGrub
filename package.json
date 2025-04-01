@@ -15,7 +15,7 @@
     "@fortawesome/free-solid-svg-icons": "^6.7.2",
     "@fortawesome/react-fontawesome": "^0.2.2",
     "@supabase/ssr": "^0.6.1",
-    "@supabase/supabase-js": "^2.41.1",
+    "@supabase/supabase-js": "^2.49.4",
     "mdb-react-ui-kit": "^9.0.0",
     "next": "^14.2.26",
     "react": "^18.3.1",
