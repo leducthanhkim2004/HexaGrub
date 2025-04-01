@@ -34,7 +34,7 @@ export default function Home() {
             <img
               alt="Appetizers"
               className="mx-auto mb-2"
-              src="https://s3-alpha-sig.figma.com/img/3c1d/e2bd/d0770b0102054979bba08ef947503c6d?Expires=1743379200&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=QWq6KjomYbko8uJ5hlcUUJz8mpBtwBW20-qwfAx142UCAPfsZt-dADB9XYXDzUztemtxa7nKE7GG5GNhqr91~ZYRUry2uFIegPeMCpAZTggM5VYPzJK21mFuMngvqUJeVY3gyrBepN9gjRrUbZ3Mo8FHH2LAQW5QGux2GUBvGNvzFlHGJfGFl3kIotzHcl8U~eknhSE9dfcnKeD6vWvopFz52xJqnavbXzR-Gu2llJ6iWbv2pq20StwQlHZu-KJr-t46uOxD5uFgLZcT-mZAENfK~qCFRsqW6NuXFx-QvKbMK4sZMVbAd8QcUcmkOCov9O8~LXTqF6WuKZaA9iN2hA__"
+              src="https://images.unsplash.com/photo-1577906096429-f73c2c312435?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
               style={{ width: "200px", height: "200px" ,}}
             />
             <a
