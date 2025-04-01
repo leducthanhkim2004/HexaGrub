@@ -7,19 +7,19 @@ export default function Home() {
     <div className="bg-gray-100">
       {/* Header */}
       <Header />
-      
+
       {/* Main Content */}
       <main className="text-center py-8">
         <img
           alt="Restaurant logo"
           className="mx-auto mb-4 w-14 h-14"
-          src="https://s3-alpha-sig.figma.com/img/db24/0331/0f206ef4180701ec963aff336898c1b5?Expires=1743379200&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=eHLNXFgOPNFoQzO9Jn7fiCz0Ta82AV1oiX24lYrV~Q4ImQ0xJ4ceK9I2MSrm4DX~xGQjTv9XCuApbIORdoW4U1DGyCWvXeoN8zkQFGG0HoJznobYJ~34T8QcnkTpdvBEVkJOeTyYSGwiNJ7cXkCLo1T6y19Xf3oHl7IiiK4cW1Vw-Jlh81f99nsWT12wyv9ssRCbjY0YudWTKr4QBT6Xe4FhJRrFZ2Re4opcrZfotpkqkAVmKO7qmitvVtXNiwkgjZx4QdA2kyv-fXDbkd5G-0q-F0wC~zVW0WzsFIwumGe4qTjV6mH5D3UV6ImKceaQ~czJ-4Pvfiv7yUyUe88V7A__"
-          style={{ width: "180px", height: "180px" }}
+          src="https://plus.unsplash.com/premium_photo-1675865396004-c7b86406affe?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8U291dGglMjBWaWV0bmFtJTIwZmxhZ3xlbnwwfHwwfHx8MA%3D%3D"
+          style={{ width: "180px", height: "180px",borderRadius: "50%" }}
         />
-        <h1 className="text-gray-700" style={{ fontSize: "40px",fontFamily: "sans-serif" }}>
+        <h1>
           Welcome To HexaGrub
         </h1>
-        <p className="text-gray-700" style={{ fontSize: "30px" }}>
+        <p className="sologan">
           Welcome To IRestaurant - Where Every Meal Is An Experience!
         </p>
         <button className="mt-4 px-6 py-2 bg-white text-black border border-black rounded">
@@ -35,11 +35,11 @@ export default function Home() {
               alt="Appetizers"
               className="mx-auto mb-2"
               src="https://images.unsplash.com/photo-1577906096429-f73c2c312435?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-              style={{ width: "200px", height: "200px" ,}}
+              style={{ width: "200px", height: "200px",borderRadius: "10px" }}
             />
             <a
               href="/menu/appetizers"
-              className="font-bold transition-transform transform hover:scale-105 hover:text-blue-500"
+              className="font-bold  transform hover:scale-105 hover:text-blue-500"
               style={{ fontSize: "20px" }}
             >
               Appetizers
@@ -49,12 +49,12 @@ export default function Home() {
             <img
               alt="Main Course"
               className="mx-auto mb-2"
-              src="https://s3-alpha-sig.figma.com/img/46a1/3461/2b44a397eeced75fe77ba9575b346e5d?Expires=1743379200&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=lbtyZr33mDV0eHUB8V-k7xSayJSX1q6k6S5CK9ie8kbkCRdtPA8RqVV0~J7Vlil39y-IF55TQKEukM~XOsk4ZqEo8YU1BYnn83lIkiqihB5XYjbEi8mGy5zC27RfCxICcD5Huh5yRnCz8vR6X1MAdprGdZUOTTtKURpdR1iNX9~LdmM7~QghSgy7a~A0VFgJxkmC7S6UcE684bw~PYAfUWACoaioJexQH8iz8vFJ1ecW3Rhr-H-6U1Qs36CllEd8DeZB7idoon0BLB1Klp86YO1WqzZP3c5b~5ouBxoEnYYx56CRzS~d3RcVFRWsJjq5ip80MrvrykxSb6v-o5BAuA__"
-              style={{ width: "200px", height: "200px" }}
+              src="https://plus.unsplash.com/premium_photo-1672742955666-34dc33980048?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NXx8bWFpbiUyMGNvdXJzZXxlbnwwfHwwfHx8MA%3D%3D"
+              style={{ width: "200px", height: "200px",borderRadius: "10px" }}
             />
             <a
               href="/menu/main-course"
-              className="font-bold transition-transform transform hover:scale-105 hover:text-blue-500"
+              className="font-bold  transform hover:scale-105 hover:text-blue-500"
               style={{ fontSize: "20px" }}
             >
               Main Course
@@ -64,12 +64,12 @@ export default function Home() {
             <img
               alt="Drinks"
               className="mx-auto mb-2"
-              src="https://s3-alpha-sig.figma.com/img/da23/3289/90c0cbee16ea42fc48dbeb899c49c3f0?Expires=1743379200&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=TEPJ3czc2T3Ko3~~wGg9kwdBa2dgh~obOVR8voj3qV8SYhMe-wJWbuvAp1AWUIlig6SfWMjd~apExi9TLIlzKm5xeqcmgq2jffJcLHFDb9r6datILgxEhTtbsHmqzH90t6DpTQa-n3ixsJwUjxUvmKwWf1MeLPcWJT0bNyZge2EVdSLki4nNzMJDPIo-mgppJvUbctqlSFrJgEijVW6zGiAe2SD9xNJAnLobSs8nCRI0-qsnwyqxBlVc1Kmq29ertQvKxPn~-53Al1X6dUXqQyx-KgPwu1BENoLb69dea67PPp0AqxW0rRss55nz57EDDCty5bHJTHMkKNK7zKdCIw__"
-              style={{ width: "200px", height: "200px" }}
+              src="https://images.unsplash.com/photo-1497534446932-c925b458314e?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MjB8fERyaW5rfGVufDB8fDB8fHww"
+              style={{ width: "200px", height: "200px",borderRadius: "10px" }}
             />
             <a
               href="/menu/drinks"
-              className="font-bold transition-transform transform hover:scale-105 hover:text-blue-500"
+              className="font-bold  transform hover:scale-105 hover:text-blue-500"
               style={{ fontSize: "20px" }}
             >
               Drinks
@@ -79,54 +79,16 @@ export default function Home() {
             <img
               alt="Dessert"
               className="mx-auto mb-2"
-              src="https://s3-alpha-sig.figma.com/img/1873/aa31/588c420da0b1e48bf1b00097b3f63f5d?Expires=1743379200&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=DxSLZexx3KpxRfY1ggAdgpeoos0aoRsMctqixepJSN2fSV~K9way3xgbwDKr4sLCarew5lqxuulk7ykceoOSy33q2QnqCDZ0FSTkAWAfk8SYDKN9zQYb~h~sgklSeM6AKB3A27v5DMLTL4mvnVgJL6QxykEnrRB-ByI3WxE77vN1zTe3gd1s-aH3ZbvGwAmLtdvema2SMXt5f3CqbRQD8OMaqEcwPck2XgCUoAZttkKn5eKs2xTqqCPAuze51Vl3MpAt1YN13PAlHoG-aQg6Ghat8pxPpRvamE~9KCDfH7lbITcAzTb5GafxH1t~FkbXEkbh02N5uDwjwGTDHFxeGA__"
-              style={{ width: "200px", height: "200px" }}
+              src="https://images.unsplash.com/photo-1488477181946-6428a0291777?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+              style={{ width: "200px", height: "200px",borderRadius: "10px" }}
             />
             <a
               href="/menu/desserts"
-              className="font-bold transition-transform transform hover:scale-105 hover:text-blue-500"
+              className="font-bold transform hover:scale-105 hover:text-blue-500"
               style={{ fontSize: "20px" }}
             >
               Dessert
             </a>
-          </div>
-        </div>
-      </section>
-
-      {/* Signature Dish Section */}
-      <section className="bg-white py-8">
-        <h2
-          className="text-2xl font-bold text-center mb-4"
-          style={{ fontSize: "45.01px" }}
-        >
-          Signature Of Us
-        </h2>
-        <div className="flex flex-col md:flex-row items-center justify-center px-4">
-          <div className="md:w-1/2 text-center md:text-left mb-4 md:mb-0">
-            <h3 className="text-3xl font-bold" style={{ fontSize: "40px" }}>
-              Steak
-            </h3>
-            <p className="text-gray-700" style={{ fontSize: "30px" }}>
-              Grilled To Perfection, With Options For Ribeye, Sirloin, Or Filet.
-            </p>
-            <button
-              className="mt-4 px-6 py-2 bg-white text-black border border-black rounded"
-              style={{
-                cursor: "pointer",
-                textAlign: "center",
-                borderRadius: "15px",
-              }}
-            >
-              Order Now
-            </button>
-          </div>
-          <div className="md:w-1/2">
-            <img
-              alt="Steak dish"
-              className="mx-auto"
-              src="https://s3-alpha-sig.figma.com/img/4669/5055/56d64db2d58f0adacc9b5664d4a14b5e?Expires=1743379200&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=VPJT3~UukxcS9yFGlUHUnkZeECwos8uh2oYtrlq49hw5kXokMOv0ErL7X6lpZnJTFDk2VfwkhFPLy8pEI7Q~6G-qs7yHQIWGb8k5p4J~D~EG2FOhSRzai9m0OuozESaAfwnYDg3LgSizkY9Iz8cKbURPYak7ZqD1DEzys~PE55RedPXiMhfKhUEO1mJWQ6ezMJgB7gnSed5Yh9ev-fltqOaN8p0R49G3FTZ8Xhi6WBSJMpOV0JdXqFokbLGDw3Nr2g0sPHXWWLWUadUiTh2gt2s4Utma9V2KV9jyoWaeBOqDUSPg85moPSm6QqJiH5-6mHVqF4RELyDOlchAik6THA__"
-              style={{ width: "400px", height: "300px" }}
-            />
           </div>
         </div>
       </section>
