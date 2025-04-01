@@ -25,6 +25,8 @@ export function CartProvider({ children }) {
   };
 
   const updateQuantity = (itemId, quantity) => {
+    if (quantity < 1) return;
+    
     setCart(prevCart =>
       prevCart.map(item =>
         item.id === itemId ? { ...item, quantity } : item
@@ -36,6 +38,10 @@ export function CartProvider({ children }) {
     return cart.reduce((total, item) => total + (item.price * item.quantity), 0);
   };
 
+  const clearCart = () => {
+    setCart([]);
+  };
+
   return (
     <CartContext.Provider value={{
       cart,
@@ -43,6 +49,7 @@ export function CartProvider({ children }) {
       removeFromCart,
       updateQuantity,
       getCartTotal,
+      clearCart,
     }}>
       {children}
     </CartContext.Provider>
@@ -50,5 +57,9 @@ export function CartProvider({ children }) {
 }
 
 export function useCart() {
-  return useContext(CartContext);
+  const context = useContext(CartContext);
+  if (!context) {
+    throw new Error('useCart must be used within a CartProvider');
+  }
+  return context;
 } 
