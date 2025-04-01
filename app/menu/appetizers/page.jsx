@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useCart } from '../../context/CartContext';
 import Header from '../../components/Header';
 import { menuService } from '../../services/menuService';
-
+import "../style.css";
 export default function AppetizersPage() {
   const { addToCart } = useCart();
   const [appetizers, setAppetizers] = useState([]);
@@ -45,10 +45,10 @@ export default function AppetizersPage() {
                 />
               </div>
               <div className="p-4">
-                <h3 className="text-xl font-semibold mb-2">{item.name}</h3>
-                <p className="text-gray-600 mb-4">{item.description}</p>
+                <h3 className="item_Name">{item.name}</h3>
+                <p className="item_Description">{item.description}</p>
                 <div className="flex justify-between items-center">
-                  <span className="text-lg font-bold">${item.price.toFixed(2)}</span>
+                  <span className="item_Price">${item.price.toFixed(2)}</span>
                   <button
                     onClick={() => addToCart(item)}
                     className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"

@@ -1,0 +1,18 @@
+
+.item_Name{
+    font-family: Arial, Helvetica, sans-serif;
+    color : black;
+    font-size: larger; 
+    font-weight: bold;
+    text-align: center;
+}
+.item_Description{
+    font-family: Arial, Helvetica, sans-serif;
+    color : black;
+    font-size: medium;
+}
+.item_Price{
+    font-family: Arial, Helvetica, sans-serif;
+    color : black;
+    font-size: medium;
+}
