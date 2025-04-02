@@ -4,6 +4,7 @@ import { useCart } from '../../context/CartContext';
 import Header from '../../components/Header';
 import { menuService } from '../../services/menuService';
 import "../style.css";
+
 export default function DrinksPage() {
   const { addToCart } = useCart();
   const [drinks, setDrinks] = useState([]);

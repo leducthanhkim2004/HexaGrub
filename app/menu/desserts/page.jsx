@@ -4,6 +4,7 @@ import { useCart } from '../../context/CartContext';
 import Header from '../../components/Header';
 import { menuService } from '../../services/menuService';
 import '../style.css';
+
 export default function DessertsPage() {
   const { addToCart } = useCart();
   const [desserts, setDesserts] = useState([]);
@@ -36,7 +37,7 @@ export default function DessertsPage() {
         <h1 className="text-3xl font-bold mb-8 text-center">Desserts</h1>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {desserts.map((item) => (
-            <div key={item.id} className="bg-gray rounded-lg shadow-md overflow-hidden">
+            <div key={item.id} className="item_Container">
               <div className="aspect-w-30 aspect-h-10">
                 <img
                   src={item.image_url}
