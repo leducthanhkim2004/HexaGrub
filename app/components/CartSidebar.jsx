@@ -90,7 +90,7 @@ export default function CartSidebar({ isOpen, onClose }) {
                         >
                           -
                         </button>
-                        <span className="mx-2">{item.quantity}</span>
+                        <span className="mx-2 text-gray-700">{item.quantity}</span>
                         <button
                           onClick={() =>
                             updateQuantity(item.id, item.quantity + 1)

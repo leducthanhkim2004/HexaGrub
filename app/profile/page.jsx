@@ -131,7 +131,12 @@ export default function Profile() {
           <div className="space-y-6">
             <div className="flex justify-between items-center mb-8">
               <div>
-                <h1 className="text-2xl font-bold mb-2">{formData.fullName || 'Welcome'}</h1>
+                <h1 className="text-2xl font-bold mb-2 flex items-center space-x-2">
+                  <svg className="w-6 h-6 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  <span>{formData.fullName || 'Welcome'}</span>
+                </h1>
                 <p className="text-gray-500">
                   Registered on: {new Date(user.created_at).toLocaleDateString('en-US', { 
                     day: '2-digit', 
