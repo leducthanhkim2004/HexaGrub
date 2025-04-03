@@ -9,6 +9,7 @@ export default function Profile() {
   const [user, setUser] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState({ type: '', text: '' });
   const [formData, setFormData] = useState({
     fullName: '',
     email: ''
@@ -16,22 +17,34 @@ export default function Profile() {
   const router = useRouter();
 
   useEffect(() => {
-    async function loadProfile() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        router.push('/login');
-        return;
-      }
-      setUser(user);
-      setFormData({
-        fullName: user.user_metadata?.full_name || '',
-        email: user.email || ''
-      });
-      setLoading(false);
-    }
-
     loadProfile();
   }, [router]);
+
+  async function loadProfile() {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      router.push('/login');
+      return;
+    }
+
+    // Fetch profile data from profiles table
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single();
+
+    if (profileError && profileError.code !== 'PGRST116') {
+      console.error('Error loading profile:', profileError);
+    }
+
+    setUser(user);
+    setFormData({
+      fullName: profile?.full_name || user.user_metadata?.full_name || '',
+      email: user.email || ''
+    });
+    setLoading(false);
+  }
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -39,30 +52,50 @@ export default function Profile() {
       ...prev,
       [name]: value
     }));
+    // Clear any existing messages when user starts typing
+    setMessage({ type: '', text: '' });
   };
 
   const handleSubmit = async () => {
     try {
-      // If the name is empty or only whitespace, keep the previous name
+      setMessage({ type: '', text: '' });
+      
+      // If the name is empty or only whitespace, show error
       if (!formData.fullName.trim()) {
-        setFormData(prev => ({
-          ...prev,
-          fullName: user.user_metadata?.full_name || ''
-        }));
-        setIsEditing(false);
+        setMessage({ type: 'error', text: 'Full name cannot be empty' });
         return;
       }
 
-      const { error } = await supabase.auth.updateUser({
+      // Update auth metadata
+      const { error: authError } = await supabase.auth.updateUser({
         data: {
           full_name: formData.fullName.trim()
         }
       });
 
-      if (error) throw error;
+      if (authError) throw authError;
+
+      // Update profiles table
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .upsert({
+          id: user.id,
+          full_name: formData.fullName.trim(),
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'id'
+        });
+
+      if (profileError) throw profileError;
+
+      // Refresh user data to get the updated metadata
+      await loadProfile();
+      
       setIsEditing(false);
+      setMessage({ type: 'success', text: 'Profile updated successfully!' });
     } catch (error) {
       console.error('Error updating profile:', error);
+      setMessage({ type: 'error', text: 'Failed to update profile. Please try again.' });
       // Revert to the previous name if there's an error
       setFormData(prev => ({
         ...prev,
@@ -85,31 +118,37 @@ export default function Profile() {
         <div className="bg-gradient-to-r from-blue-200 to-yellow-100 h-32 rounded-t-lg"></div>
         
         <div className="bg-white rounded-b-lg shadow-md p-6 relative">
-          {/* Profile Picture and Edit Button */}
-          <div className="flex justify-between items-start mb-8">
-            <div className="flex items-center space-x-4">
-              <div className="relative -mt-16">
-                <img
-                  src={user.user_metadata?.avatar_url || 'https://via.placeholder.com/100'}
-                  alt="Profile"
-                  className="w-24 h-24 rounded-full border-4 border-white shadow-lg"
-                />
-              </div>
-              <div className="mt-2">
-                <h1 className="text-2xl font-bold">{formData.fullName || 'Welcome'}</h1>
-                <p className="text-gray-500">{new Date().toLocaleDateString('en-US', { weekday: 'short', day: '2-digit', month: 'long', year: 'numeric' })}</p>
-              </div>
+          {message.text && (
+            <div className={`mb-4 p-4 rounded-lg ${
+              message.type === 'error' ? 'bg-red-50 text-red-700 border-l-4 border-red-500' :
+              message.type === 'success' ? 'bg-green-50 text-green-700 border-l-4 border-green-500' : ''
+            }`}>
+              {message.text}
             </div>
-            <button
-              onClick={() => isEditing ? handleSubmit() : setIsEditing(true)}
-              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
-            >
-              {isEditing ? 'Save' : 'Edit'}
-            </button>
-          </div>
-
-          {/* Form Fields */}
+          )}
+          
+          {/* Profile Information Section */}
           <div className="space-y-6">
+            <div className="flex justify-between items-center mb-8">
+              <div>
+                <h1 className="text-2xl font-bold mb-2">{formData.fullName || 'Welcome'}</h1>
+                <p className="text-gray-500">
+                  Registered on: {new Date(user.created_at).toLocaleDateString('en-US', { 
+                    day: '2-digit', 
+                    month: 'long', 
+                    year: 'numeric' 
+                  })}
+                </p>
+              </div>
+              <button
+                onClick={() => isEditing ? handleSubmit() : setIsEditing(true)}
+                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
+              >
+                {isEditing ? 'Save' : 'Edit'}
+              </button>
+            </div>
+
+            {/* Form Fields */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
               <input

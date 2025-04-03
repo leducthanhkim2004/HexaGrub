@@ -55,7 +55,7 @@ export default function CartSidebar({ isOpen, onClose }) {
                   >
                     <div className="flex justify-between items-start mb-2">
                       <div>
-                        <h3 className="font-semibold">{item.name}</h3>
+                        <h3 className="font-semibold text-black">{item.name}</h3>
                         <p className="text-sm text-gray-500">
                           ${item.price.toFixed(2)}
                         </p>
