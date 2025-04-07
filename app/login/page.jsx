@@ -25,9 +25,23 @@ export default function Login() {
 
       if (error) throw error;
 
+      const { data: orderData } = await supabase
+        .from('orders')
+        .insert({
+          profile_id: data.user.id,
+          total_amount: 0,
+          status: 'completed',
+        })
+        .select();
+
+      if (orderData.length === 0) {
+        throw new Error('Order creation failed');
+      }
+
       router.push('/'); // Redirect to home page after successful login
       router.refresh();
     } catch (error) {
+      console.error('Error creating order:', error);
       setError(error.message);
     } finally {
       setLoading(false);

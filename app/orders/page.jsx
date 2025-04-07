@@ -27,11 +27,11 @@ export default function OrdersPage() {
         return;
       }
 
-      // Fetch both pending and successful orders
+      // Fetch both pending and completed orders
       const { data: orders } = await supabase
         .from('orders')
         .select('*')
-        .in('status', ['pending', 'successful'])
+        .in('status', ['pending', 'completed'])
         .order('created_at', { ascending: false });
 
       setOrders(orders || []);
@@ -45,9 +45,37 @@ export default function OrdersPage() {
     loadOrders();
   };
 
+  const handleCancelOrder = async (orderId) => {
+    // Ask for confirmation first
+    if (!window.confirm('Are you sure you want to cancel this order? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .rpc('delete_order', {
+          order_id: orderId
+        });
+
+      if (error) {
+        console.error('Delete error:', error);
+        throw new Error('Failed to cancel order');
+      }
+
+      // Show success message
+      alert('Order cancelled successfully');
+
+      // Refresh orders list
+      loadOrders();
+    } catch (error) {
+      console.error('Error cancelling order:', error);
+      alert(error.message || 'Failed to cancel order. Please try again.');
+    }
+  };
+
   const getStatusBadge = (status) => {
     switch (status) {
-      case 'successful':
+      case 'completed':
         return (
           <span className="px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
             Payment Successful
@@ -77,7 +105,7 @@ export default function OrdersPage() {
   }
 
   const pendingOrders = orders.filter(order => order.status === 'pending');
-  const successfulOrders = orders.filter(order => order.status === 'successful');
+  const successfulOrders = orders.filter(order => order.status === 'completed');
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
@@ -131,11 +159,19 @@ export default function OrdersPage() {
                             ${order.total_amount.toFixed(2)}
                           </p>
                         </div>
-                        <PaymentButton
-                          orderId={order.id}
-                          amount={order.total_amount}
-                          orderInfo={`Order #${order.id}`}
-                        />
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleCancelOrder(order.id)}
+                            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+                          >
+                            Cancel Order
+                          </button>
+                          <PaymentButton
+                            orderId={order.id}
+                            amount={order.total_amount}
+                            orderInfo={`Order #${order.id}`}
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>

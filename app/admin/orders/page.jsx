@@ -73,12 +73,26 @@ export default function OrdersManagement() {
 
   const handleUpdateStatus = async (orderId, newStatus) => {
     try {
-      const { error } = await supabase
-        .from('orders')
-        .update({ status: newStatus })
-        .eq('id', orderId);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('User must be authenticated to update order');
+      }
 
-      if (error) throw error;
+      const { data, error } = await supabase
+        .from('orders')
+        .update({ 
+          status: newStatus,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', orderId)
+        .eq('profile_id', user.id)
+        .select();
+
+      if (error) {
+        console.error('Error updating order after payment:', error);
+        throw error;
+      }
+
       fetchOrders();
     } catch (error) {
       console.error('Error updating order status:', error);
@@ -198,9 +212,7 @@ export default function OrdersManagement() {
                           className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                         >
                           <option value="pending">Pending</option>
-                          <option value="processing">Processing</option>
                           <option value="completed">Completed</option>
-                          <option value="cancelled">Cancelled</option>
                         </select>
                       </td>
                     </tr>

@@ -19,7 +19,7 @@ export default function CartSidebar({ isOpen, onClose }) {
     >
       <div className="p-4 h-full flex flex-col">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">
+          <h2 className="text-xl font-bold text-black">
             {isCheckingOut ? 'Checkout' : 'Shopping Cart'}
           </h2>
           <button
@@ -56,7 +56,7 @@ export default function CartSidebar({ isOpen, onClose }) {
                     <div className="flex justify-between items-start mb-2">
                       <div>
                         <h3 className="font-semibold text-black">{item.name}</h3>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-black">
                           ${item.price.toFixed(2)}
                         </p>
                       </div>
@@ -90,7 +90,7 @@ export default function CartSidebar({ isOpen, onClose }) {
                         >
                           -
                         </button>
-                        <span className="mx-2 text-gray-700">{item.quantity}</span>
+                        <span className="mx-2 text-black">{item.quantity}</span>
                         <button
                           onClick={() =>
                             updateQuantity(item.id, item.quantity + 1)
@@ -100,7 +100,7 @@ export default function CartSidebar({ isOpen, onClose }) {
                           +
                         </button>
                       </div>
-                      <span className="font-semibold">
+                      <span className="font-semibold text-black">
                         ${(item.price * item.quantity).toFixed(2)}
                       </span>
                     </div>
@@ -112,8 +112,8 @@ export default function CartSidebar({ isOpen, onClose }) {
             {cart.length > 0 && (
               <div className="border-t border-gray-200 pt-4 mt-4">
                 <div className="flex justify-between items-center mb-4">
-                  <span className="font-bold">Total:</span>
-                  <span className="font-bold">
+                  <span className="font-bold text-black">Total:</span>
+                  <span className="font-bold text-black">
                     ${getCartTotal().toFixed(2)}
                   </span>
                 </div>

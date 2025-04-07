@@ -81,8 +81,8 @@ export default function CheckoutForm({ onClose }) {
 
       <div className="border-t border-gray-200 pt-4 mt-4">
         <div className="flex justify-between items-center mb-4">
-          <span className="font-bold">Total:</span>
-          <span className="font-bold">${getCartTotal().toFixed(2)}</span>
+          <span className="font-bold text-black">Total:</span>
+          <span className="font-bold text-black">${getCartTotal().toFixed(2)}</span>
         </div>
         
         <button
