@@ -25,6 +25,8 @@ export const orderService = {
       throw new Error('Failed to create order');
     }
 
+    console.log('Order created successfully:', order);
+
     // Then create the order items
     const orderItems = orderData.items.map(item => ({
       order_id: order.id,
@@ -99,5 +101,17 @@ export const orderService = {
     }
 
     return orders;
+  },
+
+  async updateOrderStatus(orderId, status) {
+    const { error } = await supabase
+      .from('orders')
+      .update({ status })
+      .eq('id', orderId);
+
+    if (error) {
+      console.error('Error updating order status:', error);
+      throw error;
+    }
   }
 }; 

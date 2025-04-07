@@ -2,200 +2,188 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import DashboardLayout from '../components/DashboardLayout';
+import Link from 'next/link';
 import { supabase } from '../lib/supabase';
+import PaymentButton from '../components/PaymentButton';
 
-export default function OrderHistory() {
+export default function OrdersPage() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [user, setUser] = useState(null);
-  const [cancellingOrderId, setCancellingOrderId] = useState(null);
   const router = useRouter();
 
   useEffect(() => {
-    checkUser();
+    loadOrders();
+    // Refresh orders every 5 seconds
+    const interval = setInterval(loadOrders, 5000);
+    return () => clearInterval(interval);
   }, []);
 
-  async function checkUser() {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      router.push('/login');
-      return;
-    }
-    setUser(user);
-    loadOrders(user.id);
-  }
-
-  async function loadOrders(userId) {
+  const loadOrders = async () => {
     try {
-      setLoading(true);
-      setError(null);
+      const { data: { user } } = await supabase.auth.getUser();
 
-      // First get the profile for the current user
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
+      if (!user) {
+        router.push('/login');
+        return;
+      }
 
-      if (profileError) throw profileError;
-
-      // Then get all orders with their items for this profile
-      const { data: orders, error: ordersError } = await supabase
+      // Fetch both pending and successful orders
+      const { data: orders } = await supabase
         .from('orders')
-        .select(`
-          *,
-          order_items:order_items (
-            id,
-            quantity,
-            menu_item:menu_items (
-              name,
-              description,
-              price
-            )
-          )
-        `)
-        .eq('profile_id', profile.id)
+        .select('*')
+        .in('status', ['pending', 'successful'])
         .order('created_at', { ascending: false });
 
-      if (ordersError) throw ordersError;
-
-      setOrders(orders);
-    } catch (error) {
-      console.error('Error loading orders:', error);
-      setError('Failed to load order history');
+      setOrders(orders || []);
     } finally {
       setLoading(false);
     }
-  }
+  };
 
-  async function cancelOrder(orderId) {
-    try {
-      setCancellingOrderId(orderId);
-      setError(null);
+  const handleRefresh = () => {
+    setLoading(true);
+    loadOrders();
+  };
 
-      // Delete using raw SQL query to match the exact structure
-      const { data, error: deleteError } = await supabase
-        .rpc('delete_order', { order_id: orderId });
-
-      if (deleteError) throw deleteError;
-
-      // Refresh the orders list to ensure we have the latest state
-      await loadOrders(user.id);
-
-      // Show success message
-      setError({ type: 'success', message: 'Order deleted successfully' });
-    } catch (error) {
-      console.error('Error deleting order:', error);
-      setError({ type: 'error', message: `Failed to delete order: ${error.message}` });
-    } finally {
-      setCancellingOrderId(null);
+  const getStatusBadge = (status) => {
+    switch (status) {
+      case 'successful':
+        return (
+          <span className="px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+            Payment Successful
+          </span>
+        );
+      case 'pending':
+        return (
+          <span className="px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
+            Pending Payment
+          </span>
+        );
+      default:
+        return null;
     }
-  }
+  };
 
   if (loading) {
     return (
-      <DashboardLayout>
-        <div className="text-center py-8">Loading orders...</div>
-      </DashboardLayout>
+      <div className="min-h-screen bg-gray-50 p-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+          </div>
+        </div>
+      </div>
     );
   }
 
+  const pendingOrders = orders.filter(order => order.status === 'pending');
+  const successfulOrders = orders.filter(order => order.status === 'successful');
+
   return (
-    <DashboardLayout>
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold mb-8">Order History</h1>
+    <div className="min-h-screen bg-gray-50 p-8">
+      <div className="max-w-7xl mx-auto">
+        <div className="mb-8 flex justify-between items-center">
+          <Link href="/" className="inline-flex items-center text-gray-600 hover:text-gray-900">
+            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Back to Shopping
+          </Link>
+          <button
+            onClick={handleRefresh}
+            className="inline-flex items-center text-gray-600 hover:text-gray-900"
+            disabled={loading}
+          >
+            <svg className={`w-5 h-5 mr-2 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Refresh
+          </button>
+        </div>
 
-        {error && (
-          <div className={`p-4 rounded-lg mb-6 ${
-            error.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
-          }`}>
-            {error.message}
-          </div>
-        )}
-
-        {orders.length === 0 ? (
-          <div className="text-center py-12 bg-gray-50 rounded-lg">
-            <p className="text-gray-600 text-lg">No orders yet</p>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {orders.map((order) => (
-              <div key={order.id} className="bg-white rounded-lg shadow-sm border p-6">
-                <div className="flex justify-between items-start mb-6">
-                  <div>
-                    <h2 className="text-lg font-semibold text-gray-900">
-                      Order #{order.id.slice(0, 8)}
-                    </h2>
-                    <p className="text-sm text-gray-500 mt-1">
-                      {new Date(order.created_at).toLocaleDateString('en-US', {
-                        weekday: 'long',
-                        day: '2-digit',
-                        month: 'long',
-                        year: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </p>
-                  </div>
-                  <div className="flex items-center space-x-4">
-                    <span className={`px-4 py-2 rounded-full text-sm font-medium ${
-                      order.status === 'completed' ? 'bg-green-100 text-green-800' :
-                      order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                      order.status === 'cancelled' ? 'bg-red-100 text-red-800' :
-                      'bg-gray-100 text-gray-800'
-                    }`}>
-                      {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-                    </span>
-                    {order.status === 'pending' && (
-                      <button
-                        onClick={() => cancelOrder(order.id)}
-                        disabled={cancellingOrderId === order.id}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium text-white 
-                          ${cancellingOrderId === order.id 
-                            ? 'bg-gray-400 cursor-not-allowed' 
-                            : 'bg-red-600 hover:bg-red-700'
-                          } transition-colors`}
-                      >
-                        {cancellingOrderId === order.id ? 'Cancelling...' : 'Cancel Order'}
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                <div className="border-t border-gray-100 -mx-6 px-6 py-4">
-                  <div className="space-y-4">
-                    {order.order_items.map((item) => (
-                      <div key={item.id} className="flex justify-between items-center">
-                        <div className="flex items-center space-x-4">
-                          <span className="text-gray-600 font-medium">{item.quantity}x</span>
-                          <div>
-                            <h3 className="text-gray-900 font-medium">{item.menu_item.name}</h3>
-                            <p className="text-sm text-gray-500">{item.menu_item.description}</p>
-                          </div>
-                        </div>
-                        <span className="text-gray-900 font-medium">
-                          ${(item.menu_item.price * item.quantity).toFixed(2)}
-                        </span>
+        {/* Pending Orders Section */}
+        <div className="mb-12">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Pending Orders</h2>
+          {pendingOrders.length === 0 ? (
+            <div className="bg-white rounded-lg shadow p-6 text-center">
+              <p className="text-gray-600">No pending orders</p>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {pendingOrders.map((order) => (
+                <div key={order.id} className="bg-white rounded-lg shadow overflow-hidden">
+                  <div className="p-6">
+                    <div className="flex justify-between items-start mb-4">
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900">Order #{order.id}</h3>
+                        <p className="text-sm text-gray-500">
+                          {new Date(order.created_at).toLocaleDateString()}
+                        </p>
                       </div>
-                    ))}
-                  </div>
-                </div>
+                      {getStatusBadge(order.status)}
+                    </div>
 
-                <div className="border-t border-gray-100 mt-6 pt-6">
-                  <div className="flex justify-between items-center">
-                    <span className="text-lg font-semibold text-gray-900">Total</span>
-                    <span className="text-lg font-semibold text-gray-900">
-                      ${order.total_amount.toFixed(2)}
-                    </span>
+                    <div className="border-t border-gray-200 pt-4">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <p className="text-gray-600">Total Amount</p>
+                          <p className="text-lg font-semibold text-gray-900">
+                            ${order.total_amount.toFixed(2)}
+                          </p>
+                        </div>
+                        <PaymentButton
+                          orderId={order.id}
+                          amount={order.total_amount}
+                          orderInfo={`Order #${order.id}`}
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Successful Orders Section */}
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Completed Orders</h2>
+          {successfulOrders.length === 0 ? (
+            <div className="bg-white rounded-lg shadow p-6 text-center">
+              <p className="text-gray-600">No completed orders</p>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {successfulOrders.map((order) => (
+                <div key={order.id} className="bg-white rounded-lg shadow overflow-hidden">
+                  <div className="p-6">
+                    <div className="flex justify-between items-start mb-4">
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900">Order #{order.id}</h3>
+                        <p className="text-sm text-gray-500">
+                          {new Date(order.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                      {getStatusBadge(order.status)}
+                    </div>
+
+                    <div className="border-t border-gray-200 pt-4">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <p className="text-gray-600">Total Amount</p>
+                          <p className="text-lg font-semibold text-gray-900">
+                            ${order.total_amount.toFixed(2)}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
-    </DashboardLayout>
+    </div>
   );
 }
