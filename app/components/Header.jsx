@@ -7,7 +7,17 @@ import { useCart } from '../context/CartContext';
 import CartSidebar from './CartSidebar';
 import { supabase } from '../lib/supabase';
 import "@fortawesome/fontawesome-free/css/all.min.css";
-
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+export const notify = () => toast.success('Item added to cart!', {
+  position: 'top-right',
+  autoClose: 3000,
+  hideProgressBar: false,
+  closeOnClick: true,
+  pauseOnHover: true,
+  draggable: true,
+  progress: undefined,
+});
 export default function Header() {
   const { cart } = useCart();
   const router = useRouter();
@@ -42,6 +52,8 @@ export default function Header() {
     await supabase.auth.signOut();
     router.push('/');
   };
+
+  
 
   return (
     <>
@@ -114,8 +126,11 @@ export default function Header() {
 
             {/* Cart Icon */}
             <button
-              onClick={() => setIsCartOpen(true)}
-              className="relative p-2 text-gray-600 hover:text-gray-900"
+              onClick={() => {
+                setIsCartOpen(true);
+                notify();
+              }}
+              className="relative p-2 text-gray-600 hover:text-gray-900 cart-icon"
               aria-label="Shopping cart"
             >
               <svg
@@ -140,6 +155,7 @@ export default function Header() {
       </header>
 
       <CartSidebar isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+      <ToastContainer />
     </>
   );
 }

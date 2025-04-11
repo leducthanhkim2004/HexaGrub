@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../utils/supabase/client';
+import { supabase } from '../../utils/supabase/client';
 import Header from '../components/Header';
 import CartSidebar from '../components/CartSidebar';
 
@@ -22,17 +22,16 @@ export default function MenuPage() {
 
         if (error) throw error;
 
-        // Debug log each item's images
-        data.forEach(item => {
-          console.log(`Item "${item.name}" images:`, {
-            hasImageUrls: !!item.image_urls,
-            isArray: Array.isArray(item.image_urls),
-            length: item.image_urls?.length,
-            urls: item.image_urls
-          });
-        });
+        // Process the data to ensure consistent image handling
+        const processedData = data.map(item => ({
+          ...item,
+          // Ensure image_urls is always an array
+          image_urls: Array.isArray(item.image_urls) ? item.image_urls : 
+                     item.image_urls ? [item.image_urls] : 
+                     item.image_url ? [item.image_url] : []
+        }));
 
-        setMenuItems(data);
+        setMenuItems(processedData);
       } catch (error) {
         console.error('Error fetching menu items:', error);
         setError(error.message);
@@ -46,8 +45,8 @@ export default function MenuPage() {
 
   // Function to safely get image URL
   const getImageUrl = (urls, index = 0) => {
-    if (!urls || !Array.isArray(urls) || !urls.length) return null;
-    return urls[index];
+    if (!urls || !Array.isArray(urls) || !urls.length) return '/placeholder.jpg';
+    return urls[index] || '/placeholder.jpg';
   };
 
   if (loading) {
@@ -67,7 +66,6 @@ export default function MenuPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {menuItems.map((item) => {
             const thumbnailUrl = getImageUrl(item.image_urls);
-            console.log(`Rendering thumbnail for "${item.name}":`, thumbnailUrl);
             
             return (
               <div
@@ -76,27 +74,18 @@ export default function MenuPage() {
                 onClick={() => setSelectedItem(item)}
               >
                 <div className="relative h-64">
-                  {thumbnailUrl ? (
-                    <>
-                      <img
-                        src={thumbnailUrl}
-                        alt={item.name}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          console.error(`Failed to load thumbnail for "${item.name}":`, thumbnailUrl);
-                          e.target.onerror = null;
-                          e.target.src = '/placeholder.jpg';
-                        }}
-                      />
-                      {item.image_urls.length > 1 && (
-                        <div className="absolute bottom-2 right-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded-full text-sm">
-                          +{item.image_urls.length - 1} more
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                      <span className="text-gray-400">No image available</span>
+                  <img
+                    src={thumbnailUrl}
+                    alt={item.name}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = '/placeholder.jpg';
+                    }}
+                  />
+                  {item.image_urls.length > 1 && (
+                    <div className="absolute bottom-2 right-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded-full text-sm">
+                      +{item.image_urls.length - 1} more
                     </div>
                   )}
                 </div>
@@ -142,14 +131,13 @@ export default function MenuPage() {
                 <div className="grid grid-cols-1 gap-6">
                   {/* Image Gallery */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {selectedItem.image_urls && selectedItem.image_urls.map((url, index) => (
+                    {selectedItem.image_urls.map((url, index) => (
                       <div key={index} className="relative aspect-w-16 aspect-h-9">
                         <img
                           src={url}
                           alt={`${selectedItem.name} ${index + 1}`}
                           className="w-full h-64 object-cover rounded-lg"
                           onError={(e) => {
-                            console.error(`Failed to load detail image ${index} for "${selectedItem.name}":`, url);
                             e.target.onerror = null;
                             e.target.src = '/placeholder.jpg';
                           }}
