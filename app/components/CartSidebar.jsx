@@ -117,12 +117,7 @@ export default function CartSidebar({ isOpen, onClose }) {
                     ${getCartTotal().toFixed(2)}
                   </span>
                 </div>
-                <button
-                  className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition-colors"
-                  onClick={handleCheckout}
-                >
-                  Proceed to Checkout
-                </button>
+                <CheckoutForm onClose={onClose} />
               </div>
             )}
           </>

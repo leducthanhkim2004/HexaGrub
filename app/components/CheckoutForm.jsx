@@ -46,7 +46,7 @@ export default function CheckoutForm({ onClose }) {
       onClose();
       
       // Show success message
-      alert('Order placed successfully! We will contact you shortly.');
+      alert('Your order has been placed successfully. Please complete the checkout procedure.');
     } catch (err) {
       setError(err.message || 'Failed to place order. Please try again.');
       console.error('Checkout error:', err);
@@ -79,24 +79,17 @@ export default function CheckoutForm({ onClose }) {
         </div>
       )}
 
-      <div className="border-t border-gray-200 pt-4 mt-4">
-        <div className="flex justify-between items-center mb-4">
-          <span className="font-bold text-black">Total:</span>
-          <span className="font-bold text-black">${getCartTotal().toFixed(2)}</span>
-        </div>
-        
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className={`w-full ${
-            isSubmitting
-              ? 'bg-gray-400'
-              : 'bg-blue-600 hover:bg-blue-700'
-          } text-white py-2 px-4 rounded transition-colors`}
-        >
-          {isSubmitting ? 'Placing Order...' : 'Place Order'}
-        </button>
-      </div>
+      <button
+        type="submit"
+        disabled={isSubmitting}
+        className={`w-full ${
+          isSubmitting
+            ? 'bg-gray-400'
+            : 'bg-blue-600 hover:bg-blue-700'
+        } text-white py-2 px-4 rounded transition-colors`}
+      >
+        {isSubmitting ? 'Placing Order...' : 'Place Order'}
+      </button>
     </form>
   );
 } 
