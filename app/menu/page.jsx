@@ -1,63 +1,125 @@
-import React, { useState } from 'react';
+'use client';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '../utils/supabase/client';
 import Header from '../components/Header';
 import CartSidebar from '../components/CartSidebar';
 
-const MenuPage = () => {
+export default function MenuPage() {
+  const [menuItems, setMenuItems] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [cart, setCart] = useState([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
 
-  const menuItems = [
-    // Add your menu items here
-  ];
+  useEffect(() => {
+    const fetchMenuItems = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('menu_items')
+          .select('*')
+          .order('category');
 
-  const addToCart = (item) => {
-    // Implement the addToCart function
+        if (error) throw error;
+
+        // Debug log each item's images
+        data.forEach(item => {
+          console.log(`Item "${item.name}" images:`, {
+            hasImageUrls: !!item.image_urls,
+            isArray: Array.isArray(item.image_urls),
+            length: item.image_urls?.length,
+            urls: item.image_urls
+          });
+        });
+
+        setMenuItems(data);
+      } catch (error) {
+        console.error('Error fetching menu items:', error);
+        setError(error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMenuItems();
+  }, []);
+
+  // Function to safely get image URL
+  const getImageUrl = (urls, index = 0) => {
+    if (!urls || !Array.isArray(urls) || !urls.length) return null;
+    return urls[index];
   };
 
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
+
+  if (error) {
+    return <div className="min-h-screen flex items-center justify-center text-red-500">{error}</div>;
+  }
+
   return (
-    <>
+    <div className="min-h-screen bg-gray-100">
       <Header />
-      <div className="min-h-screen bg-gray-100">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
-          {menuItems.map((item) => (
-            <div
-              key={item.id}
-              className="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer hover:shadow-lg transition-shadow duration-300"
-              onClick={() => setSelectedItem(item)}
-            >
-              <div className="relative h-48">
-                {item.image_urls?.[0] && (
-                  <img
-                    src={item.image_urls[0]}
-                    alt={item.name}
-                    className="w-full h-full object-cover"
-                  />
-                )}
-                {item.image_urls?.length > 1 && (
-                  <div className="absolute bottom-2 right-2 bg-white bg-opacity-75 rounded-full px-2 py-1 text-xs">
-                    +{item.image_urls.length - 1} more
+      <main className="container mx-auto px-4 py-8">
+        <h1 className="text-3xl font-bold text-center mb-8">Our Menu</h1>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {menuItems.map((item) => {
+            const thumbnailUrl = getImageUrl(item.image_urls);
+            console.log(`Rendering thumbnail for "${item.name}":`, thumbnailUrl);
+            
+            return (
+              <div
+                key={item.id}
+                className="bg-white rounded-lg shadow-lg overflow-hidden cursor-pointer hover:shadow-xl transition-shadow duration-300"
+                onClick={() => setSelectedItem(item)}
+              >
+                <div className="relative h-64">
+                  {thumbnailUrl ? (
+                    <>
+                      <img
+                        src={thumbnailUrl}
+                        alt={item.name}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          console.error(`Failed to load thumbnail for "${item.name}":`, thumbnailUrl);
+                          e.target.onerror = null;
+                          e.target.src = '/placeholder.jpg';
+                        }}
+                      />
+                      {item.image_urls.length > 1 && (
+                        <div className="absolute bottom-2 right-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded-full text-sm">
+                          +{item.image_urls.length - 1} more
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                      <span className="text-gray-400">No image available</span>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="p-4">
+                  <h3 className="text-xl font-semibold mb-2">{item.name}</h3>
+                  <p className="text-gray-600 mb-4 line-clamp-2">{item.description}</p>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xl font-bold">${parseFloat(item.price).toFixed(2)}</span>
+                    <button 
+                      className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        // Add to cart functionality here
+                      }}
+                    >
+                      Add to Cart
+                    </button>
                   </div>
-                )}
-              </div>
-              <div className="p-4">
-                <h3 className="text-lg font-semibold text-black">{item.name}</h3>
-                <p className="text-gray-600 mt-1">{item.description}</p>
-                <div className="mt-2 flex justify-between items-center">
-                  <span className="text-lg font-bold text-black">${item.price.toFixed(2)}</span>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      addToCart(item);
-                    }}
-                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                  >
-                    Add to Cart
-                  </button>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Item Details Modal */}
@@ -65,8 +127,8 @@ const MenuPage = () => {
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
             <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
               <div className="p-6">
-                <div className="flex justify-between items-start mb-4">
-                  <h2 className="text-2xl font-bold text-black">{selectedItem.name}</h2>
+                <div className="flex justify-between items-start mb-6">
+                  <h2 className="text-2xl font-bold">{selectedItem.name}</h2>
                   <button
                     onClick={() => setSelectedItem(null)}
                     className="text-gray-500 hover:text-gray-700"
@@ -76,32 +138,31 @@ const MenuPage = () => {
                     </svg>
                   </button>
                 </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <div className="text-gray-600">{selectedItem.description}</div>
-                    <div className="text-xl font-bold text-black">${selectedItem.price.toFixed(2)}</div>
-                    <div className="text-sm text-gray-500">Category: {selectedItem.category}</div>
-                    <button
-                      onClick={() => {
-                        addToCart(selectedItem);
-                        setSelectedItem(null);
-                      }}
-                      className="w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                    >
-                      Add to Cart
-                    </button>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    {selectedItem.image_urls?.map((url, index) => (
-                      <img
-                        key={index}
-                        src={url}
-                        alt={`${selectedItem.name} ${index + 1}`}
-                        className="w-full h-48 object-cover rounded-lg"
-                      />
+
+                <div className="grid grid-cols-1 gap-6">
+                  {/* Image Gallery */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {selectedItem.image_urls && selectedItem.image_urls.map((url, index) => (
+                      <div key={index} className="relative aspect-w-16 aspect-h-9">
+                        <img
+                          src={url}
+                          alt={`${selectedItem.name} ${index + 1}`}
+                          className="w-full h-64 object-cover rounded-lg"
+                          onError={(e) => {
+                            console.error(`Failed to load detail image ${index} for "${selectedItem.name}":`, url);
+                            e.target.onerror = null;
+                            e.target.src = '/placeholder.jpg';
+                          }}
+                        />
+                      </div>
                     ))}
+                  </div>
+
+                  {/* Item Details */}
+                  <div className="space-y-4">
+                    <p className="text-gray-600">{selectedItem.description}</p>
+                    <p className="text-2xl font-bold">${parseFloat(selectedItem.price).toFixed(2)}</p>
+                    <p className="text-gray-500">Category: {selectedItem.category}</p>
                   </div>
                 </div>
               </div>
@@ -109,16 +170,13 @@ const MenuPage = () => {
           </div>
         )}
 
-        {/* Cart Sidebar */}
         <CartSidebar
           isOpen={isCartOpen}
           onClose={() => setIsCartOpen(false)}
           cart={cart}
           onUpdateCart={setCart}
         />
-      </div>
-    </>
+      </main>
+    </div>
   );
-};
-
-export default MenuPage; 
+} 

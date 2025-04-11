@@ -78,26 +78,40 @@ export default function MenuManagement() {
     try {
       const uploadPromises = Array.from(files).map(async (file) => {
         const fileExt = file.name.split('.').pop();
-        const fileName = `${Math.random()}.${fileExt}`;
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
         const filePath = `${fileName}`;
 
+        console.log('Uploading file:', filePath);
+
+        // Upload the file
         const { error: uploadError } = await supabase.storage
           .from('menu-images')
-          .upload(filePath, file);
+          .upload(filePath, file, {
+            cacheControl: '3600',
+            upsert: false
+          });
 
-        if (uploadError) throw uploadError;
+        if (uploadError) {
+          console.error('Upload error:', uploadError);
+          throw uploadError;
+        }
 
-        const { data: { publicUrl } } = supabase.storage
+        // Get the public URL using the correct method
+        const { data } = supabase.storage
           .from('menu-images')
           .getPublicUrl(filePath);
 
+        const publicUrl = data.publicUrl;
+        console.log('Generated public URL:', publicUrl);
         return publicUrl;
       });
 
       const uploadedUrls = await Promise.all(uploadPromises);
+      console.log('All uploaded URLs:', uploadedUrls);
+      
       setNewItem(prev => ({
         ...prev,
-        image_urls: [...prev.image_urls, ...uploadedUrls]
+        image_urls: [...(prev.image_urls || []), ...uploadedUrls]
       }));
     } catch (error) {
       console.error('Error uploading images:', error);
@@ -117,6 +131,11 @@ export default function MenuManagement() {
   const handleCreateItem = async (e) => {
     e.preventDefault();
     try {
+      console.log('Creating item with data:', {
+        ...newItem,
+        image_urls: newItem.image_urls
+      });
+
       const { error } = await supabase
         .from('menu_items')
         .insert([{
@@ -127,8 +146,15 @@ export default function MenuManagement() {
           image_urls: newItem.image_urls
         }]);
 
-      if (error) throw error;
-      fetchMenuItems();
+      if (error) {
+        console.error('Error creating menu item:', error);
+        throw error;
+      }
+
+      // Refresh the menu items list
+      await fetchMenuItems();
+      
+      // Reset the form
       setNewItem({
         name: '',
         description: '',
@@ -145,6 +171,12 @@ export default function MenuManagement() {
   const handleUpdateItem = async (e) => {
     e.preventDefault();
     try {
+      console.log('Updating item with data:', {
+        id: editingItem.id,
+        ...newItem,
+        image_urls: newItem.image_urls
+      });
+
       const { error } = await supabase
         .from('menu_items')
         .update({
@@ -156,8 +188,16 @@ export default function MenuManagement() {
         })
         .eq('id', editingItem.id);
 
-      if (error) throw error;
-      fetchMenuItems();
+      if (error) {
+        console.error('Error updating menu item:', error);
+        setError('Failed to update menu item');
+        return;
+      }
+
+      // Refresh the menu items list
+      await fetchMenuItems();
+      
+      // Reset the form and close the edit modal
       setEditingItem(null);
       setNewItem({
         name: '',
@@ -166,6 +206,9 @@ export default function MenuManagement() {
         category: '',
         image_urls: []
       });
+      
+      // Clear any previous errors
+      setError(null);
     } catch (error) {
       console.error('Error updating menu item:', error);
       setError('Failed to update menu item');
