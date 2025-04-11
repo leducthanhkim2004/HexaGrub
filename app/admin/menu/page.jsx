@@ -17,9 +17,11 @@ export default function MenuManagement() {
     description: '',
     price: '',
     category: '',
-    image_url: ''
+    image_urls: []
   });
   const [editingItem, setEditingItem] = useState(null);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -69,41 +71,75 @@ export default function MenuManagement() {
     }
   };
 
-  const handleAddItem = async (e) => {
+  const handleImageUpload = async (e) => {
+    const files = e.target.files;
+    setIsUploading(true);
+    
+    try {
+      const uploadPromises = Array.from(files).map(async (file) => {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        const filePath = `${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('menu-images')
+          .upload(filePath, file);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('menu-images')
+          .getPublicUrl(filePath);
+
+        return publicUrl;
+      });
+
+      const uploadedUrls = await Promise.all(uploadPromises);
+      setNewItem(prev => ({
+        ...prev,
+        image_urls: [...prev.image_urls, ...uploadedUrls]
+      }));
+    } catch (error) {
+      console.error('Error uploading images:', error);
+      setError('Failed to upload images');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleRemoveImage = (index) => {
+    setNewItem(prev => ({
+      ...prev,
+      image_urls: prev.image_urls.filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleCreateItem = async (e) => {
     e.preventDefault();
     try {
       const { error } = await supabase
         .from('menu_items')
         .insert([{
-          ...newItem,
-          price: parseFloat(newItem.price)
+          name: newItem.name,
+          description: newItem.description,
+          price: parseFloat(newItem.price),
+          category: newItem.category,
+          image_urls: newItem.image_urls
         }]);
 
       if (error) throw error;
-      
+      fetchMenuItems();
       setNewItem({
         name: '',
         description: '',
         price: '',
         category: '',
-        image_url: ''
+        image_urls: []
       });
-      
-      fetchMenuItems();
     } catch (error) {
-      console.error('Error adding menu item:', error);
+      console.error('Error creating menu item:', error);
+      setError('Failed to create menu item');
     }
-  };
-
-  const handleEditItem = (item) => {
-    setEditingItem(item);
-    setNewItem({
-      name: item.name,
-      description: item.description,
-      price: item.price,
-      category: item.category,
-      image_url: item.image_url || ''
-    });
   };
 
   const handleUpdateItem = async (e) => {
@@ -116,26 +152,23 @@ export default function MenuManagement() {
           description: newItem.description,
           price: parseFloat(newItem.price),
           category: newItem.category,
-          image_url: newItem.image_url,
-          updated_at: new Date().toISOString()
+          image_urls: newItem.image_urls
         })
         .eq('id', editingItem.id);
 
       if (error) throw error;
-
-      // Refresh menu items
-      await fetchMenuItems();
+      fetchMenuItems();
       setEditingItem(null);
       setNewItem({
         name: '',
         description: '',
         price: '',
         category: '',
-        image_url: ''
+        image_urls: []
       });
     } catch (error) {
       console.error('Error updating menu item:', error);
-      setError('Error updating menu item: ' + error.message);
+      setError('Failed to update menu item');
     }
   };
 
@@ -221,9 +254,9 @@ export default function MenuManagement() {
           
           <div className="bg-white shadow rounded-lg p-6 mb-8">
             {/* Add New Item Form */}
-            <div className="bg-blue-50 shadow-lg rounded-lg p-8 mb-8 border-2 border-blue-200">
-              <h2 className="text-2xl font-bold text-black mb-6 border-b-2 border-blue-200 pb-2">Add New Menu Item</h2>
-              <form onSubmit={handleAddItem} className="space-y-6">
+            <div className="bg-white shadow rounded-lg p-6 mb-8">
+              <h2 className="text-2xl font-bold text-black mb-6">Add New Menu Item</h2>
+              <form onSubmit={handleCreateItem} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-black">Name</label>
@@ -262,13 +295,36 @@ export default function MenuManagement() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-black">Image URL</label>
+                    <label className="block text-sm font-medium text-black">Images</label>
+                    <div className="mt-2 grid grid-cols-3 gap-2">
+                      {newItem.image_urls.map((url, index) => (
+                        <div key={index} className="relative">
+                          <img src={url} alt={`Preview ${index + 1}`} className="w-full h-24 object-cover rounded" />
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveImage(index)}
+                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
                     <input
-                      type="url"
-                      value={newItem.image_url}
-                      onChange={(e) => setNewItem({ ...newItem, image_url: e.target.value })}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-black"
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="mt-2 block w-full text-sm text-gray-500
+                        file:mr-4 file:py-2 file:px-4
+                        file:rounded-full file:border-0
+                        file:text-sm file:font-semibold
+                        file:bg-blue-50 file:text-blue-700
+                        hover:file:bg-blue-100"
                     />
+                    {isUploading && <p className="text-sm text-gray-500">Uploading images...</p>}
                   </div>
                 </div>
                 <div>
@@ -331,12 +387,13 @@ export default function MenuManagement() {
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Images</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {sortedMenuItems.map((item) => (
-                      <tr key={item.id}>
+                      <tr key={item.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => setSelectedItem(item)}>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900">{item.name}</div>
                         </td>
@@ -347,22 +404,41 @@ export default function MenuManagement() {
                           <div className="text-sm text-gray-900">${item.price.toFixed(2)}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                            {item.category}
-                          </span>
+                          <div className="text-sm text-gray-900">{item.category}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex space-x-2">
+                            {item.image_urls?.slice(0, 3).map((url, index) => (
+                              <img
+                                key={index}
+                                src={url}
+                                alt={`${item.name} ${index + 1}`}
+                                className="h-10 w-10 rounded object-cover"
+                              />
+                            ))}
+                            {item.image_urls?.length > 3 && (
+                              <div className="h-10 w-10 rounded bg-gray-100 flex items-center justify-center">
+                                <span className="text-xs text-gray-500">+{item.image_urls.length - 3}</span>
+                              </div>
+                            )}
+                          </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <button
-                            onClick={() => handleEditItem(item)}
-                            className="text-blue-600 hover:text-blue-900 mr-4"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingItem(item);
+                              setNewItem({
+                                name: item.name,
+                                description: item.description,
+                                price: item.price.toString(),
+                                category: item.category,
+                                image_urls: item.image_urls || []
+                              });
+                            }}
+                            className="text-blue-600 hover:text-blue-900"
                           >
                             Edit
-                          </button>
-                          <button
-                            onClick={() => handleDeleteItem(item.id)}
-                            className="text-red-600 hover:text-red-900"
-                          >
-                            Delete
                           </button>
                         </td>
                       </tr>
@@ -371,84 +447,147 @@ export default function MenuManagement() {
                 </table>
               </div>
             </div>
-
-            {/* Edit Item Modal */}
-            {editingItem && (
-              <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4">
-                <div className="bg-white rounded-lg p-6 max-w-md w-full">
-                  <h2 className="text-xl font-bold mb-4 text-black">Edit Menu Item</h2>
-                  <form onSubmit={handleUpdateItem} className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-black">Name</label>
-                      <input
-                        type="text"
-                        value={newItem.name}
-                        onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-black"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-black">Description</label>
-                      <textarea
-                        value={newItem.description}
-                        onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-black"
-                        rows="3"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-black">Price</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={newItem.price}
-                        onChange={(e) => setNewItem({ ...newItem, price: e.target.value })}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-black"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-black">Category</label>
-                      <input
-                        type="text"
-                        value={newItem.category}
-                        onChange={(e) => setNewItem({ ...newItem, category: e.target.value })}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-black"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-black">Image URL</label>
-                      <input
-                        type="text"
-                        value={newItem.image_url}
-                        onChange={(e) => setNewItem({ ...newItem, image_url: e.target.value })}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-black"
-                      />
-                    </div>
-                    <div className="flex justify-end space-x-3">
-                      <button
-                        type="button"
-                        onClick={() => setEditingItem(null)}
-                        className="px-4 py-2 text-sm font-medium text-black bg-gray-100 rounded-md hover:bg-gray-200"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type="submit"
-                        className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
-                      >
-                        Update Item
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              </div>
-            )}
           </div>
         </div>
+
+        {/* Item Details Modal */}
+        {selectedItem && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="p-6">
+                <div className="flex justify-between items-start mb-4">
+                  <h2 className="text-2xl font-bold text-black">{selectedItem.name}</h2>
+                  <button
+                    onClick={() => setSelectedItem(null)}
+                    className="text-gray-500 hover:text-gray-700"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div className="text-gray-600">{selectedItem.description}</div>
+                    <div className="text-xl font-bold text-black">${selectedItem.price.toFixed(2)}</div>
+                    <div className="text-sm text-gray-500">Category: {selectedItem.category}</div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    {selectedItem.image_urls?.map((url, index) => (
+                      <img
+                        key={index}
+                        src={url}
+                        alt={`${selectedItem.name} ${index + 1}`}
+                        className="w-full h-48 object-cover rounded-lg"
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Edit Item Modal */}
+        {editingItem && (
+          <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4">
+            <div className="bg-white rounded-lg p-6 max-w-md w-full">
+              <h2 className="text-xl font-bold mb-4 text-black">Edit Menu Item</h2>
+              <form onSubmit={handleUpdateItem} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-black">Name</label>
+                  <input
+                    type="text"
+                    value={newItem.name}
+                    onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-black"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-black">Description</label>
+                  <textarea
+                    value={newItem.description}
+                    onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-black"
+                    rows="3"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-black">Price</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={newItem.price}
+                    onChange={(e) => setNewItem({ ...newItem, price: e.target.value })}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-black"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-black">Category</label>
+                  <input
+                    type="text"
+                    value={newItem.category}
+                    onChange={(e) => setNewItem({ ...newItem, category: e.target.value })}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-black"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-black">Images</label>
+                  <div className="mt-2 grid grid-cols-3 gap-2">
+                    {newItem.image_urls.map((url, index) => (
+                      <div key={index} className="relative">
+                        <img src={url} alt={`Preview ${index + 1}`} className="w-full h-24 object-cover rounded" />
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveImage(index)}
+                          className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="mt-2 block w-full text-sm text-gray-500
+                      file:mr-4 file:py-2 file:px-4
+                      file:rounded-full file:border-0
+                      file:text-sm file:font-semibold
+                      file:bg-blue-50 file:text-blue-700
+                      hover:file:bg-blue-100"
+                  />
+                  {isUploading && <p className="text-sm text-gray-500">Uploading images...</p>}
+                </div>
+                <div className="flex justify-end space-x-3">
+                  <button
+                    type="button"
+                    onClick={() => setEditingItem(null)}
+                    className="px-4 py-2 text-sm font-medium text-black bg-gray-100 rounded-md hover:bg-gray-200"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+                  >
+                    Update Item
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
