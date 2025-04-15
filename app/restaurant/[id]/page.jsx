@@ -138,7 +138,7 @@ export default function RestaurantPage({ params }) {
                 placeholder="Search menu..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 rounded-lg border border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white shadow-sm placeholder-gray-500"
               />
             </div>
             <div className="flex gap-2 overflow-x-auto pb-2">
@@ -174,10 +174,10 @@ export default function RestaurantPage({ params }) {
                 />
               </div>
               <div className="p-4">
-                <h3 className="text-xl font-semibold mb-2">{item.name}</h3>
+                <h3 className="text-xl font-bold text-gray-900 mb-2 drop-shadow-sm">{item.name}</h3>
                 <p className="text-gray-600 mb-4">{item.description}</p>
                 <div className="flex justify-between items-center">
-                  <span className="text-xl font-bold text-blue-600">
+                  <span className="text-xl font-bold text-blue-700 drop-shadow-sm">
                     ${parseFloat(item.price).toFixed(2)}
                   </span>
                   <button

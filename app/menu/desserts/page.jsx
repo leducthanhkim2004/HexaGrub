@@ -96,7 +96,7 @@ export default function DessertsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {desserts.map((item) => (
               <div key={item.id}>
-                <div className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
+                <div className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 border border-gray-200">
                   <div className="relative h-64 overflow-hidden cursor-pointer" onClick={() => openModal(item)}>
                     <img
                       src={getImageUrl(item.image_urls)}
@@ -113,10 +113,10 @@ export default function DessertsPage() {
                       </div>
                     )}
                   </div>
-                  <div className="p-6 h-48 flex flex-col justify-between">
+                  <div className="p-6 h-48 flex flex-col justify-between bg-white">
                     <div>
-                      <h3 className="text-2xl font-bold text-black mb-3">{item.name}</h3>
-                      <p className="text-gray-600 mb-4">{item.description}</p>
+                      <h3 className="text-2xl font-extrabold text-gray-900 mb-3 drop-shadow-sm">{item.name}</h3>
+                      <p className="text-gray-700 mb-4">{item.description}</p>
                     </div>
                     <div className="flex justify-between items-center mt-auto">
                       <span className="text-xl font-bold text-black">${item.price.toFixed(2)}</span>
@@ -124,7 +124,7 @@ export default function DessertsPage() {
                         onClick={() => {addToCart(item)
                           
                         }}
-                        className="inline-block px-4 py-2 border-2 border-black text-black font-medium hover:bg-black hover:text-white transition-all duration-300"
+                        className="inline-block px-4 py-2 border-2 border-black text-gray-900 bg-white font-medium hover:bg-black hover:text-white transition-all duration-300"
                       >
                         Add to Cart
                       </button>
@@ -140,7 +140,7 @@ export default function DessertsPage() {
       {/* Modal */}
       {selectedItem && (
         <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden border border-gray-300 shadow-lg">
             <div className="relative">
               <img
                 src={getImageUrl(selectedItem.image_urls, currentImageIndex)}
@@ -177,9 +177,9 @@ export default function DessertsPage() {
                 ×
               </button>
             </div>
-            <div className="p-6">
-              <h2 className="text-3xl font-bold text-black mb-4">{selectedItem.name}</h2>
-              <p className="text-gray-600 mb-6">{selectedItem.description}</p>
+            <div className="p-6 bg-white">
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">{selectedItem.name}</h2>
+              <p className="text-gray-700 mb-6">{selectedItem.description}</p>
               <div className="flex justify-between items-center">
                 <span className="text-2xl font-bold text-black">${selectedItem.price.toFixed(2)}</span>
                 <button

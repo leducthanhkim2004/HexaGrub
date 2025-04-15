@@ -308,134 +308,136 @@ export default function MenuManagement() {
             <div className="w-32"></div> {/* Spacer for flex alignment */}
           </div>
           
-          <div className="bg-white shadow rounded-lg p-6 mb-8">
+          <div className="bg-gray-100 shadow-md rounded-lg p-6 mb-8">
             {/* Add New Item Form */}
             <div className="bg-white shadow rounded-lg p-6 mb-8">
               <h2 className="text-2xl font-bold text-black mb-6">Add New Menu Item</h2>
-              <form onSubmit={handleCreateItem} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-black">Name</label>
-                    <input
-                      type="text"
-                      value={newItem.name}
-                      onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-black"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-black">Category</label>
-                    <select
-                      value={newItem.category}
-                      onChange={(e) => setNewItem({ ...newItem, category: e.target.value })}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-black"
-                      required
-                    >
-                      <option value="">Select a category</option>
-                      <option value="appetizers">Appetizers</option>
-                      <option value="main-course">Main Course</option>
-                      <option value="drinks">Drinks</option>
-                      <option value="desserts">Desserts</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-black">Price</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={newItem.price}
-                      onChange={(e) => setNewItem({ ...newItem, price: e.target.value })}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-black"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-black">Images</label>
-                    <div className="mt-2 space-y-4">
-                      {/* URL Input Section */}
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          value={imageUrlInput}
-                          onChange={(e) => setImageUrlInput(e.target.value)}
-                          placeholder="Paste image URL here"
-                          className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-black"
-                        />
-                        <button
-                          type="button"
-                          onClick={handleAddImageUrl}
-                          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                        >
-                          Add URL
-                        </button>
-                      </div>
+              <div className="bg-gray-50 p-6 rounded-lg border border-gray-400">
+                <form onSubmit={handleCreateItem} className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-black">Name</label>
+                      <input
+                        type="text"
+                        value={newItem.name}
+                        onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900 bg-white placeholder:text-gray-500"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-black">Category</label>
+                      <select
+                        value={newItem.category}
+                        onChange={(e) => setNewItem({ ...newItem, category: e.target.value })}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900 bg-white placeholder:text-gray-500"
+                        required
+                      >
+                        <option value="">Select a category</option>
+                        <option value="appetizers">Appetizers</option>
+                        <option value="main-course">Main Course</option>
+                        <option value="drinks">Drinks</option>
+                        <option value="desserts">Desserts</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-black">Price</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={newItem.price}
+                        onChange={(e) => setNewItem({ ...newItem, price: e.target.value })}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900 bg-white placeholder:text-gray-500"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-black">Images</label>
+                      <div className="mt-2 space-y-4">
+                        {/* URL Input Section */}
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={imageUrlInput}
+                            onChange={(e) => setImageUrlInput(e.target.value)}
+                            placeholder="Paste image URL here"
+                            className="flex-1 rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900 bg-white border border-gray-400 placeholder:text-gray-500"
+                          />
+                          <button
+                            type="button"
+                            onClick={handleAddImageUrl}
+                            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                          >
+                            Add URL
+                          </button>
+                        </div>
 
-                      {/* File Upload Section */}
-                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
-                        <input
-                          type="file"
-                          multiple
-                          accept="image/*"
-                          onChange={handleImageUpload}
-                          className="block w-full text-sm text-gray-500
-                            file:mr-4 file:py-2 file:px-4
-                            file:rounded-full file:border-0
-                            file:text-sm file:font-semibold
-                            file:bg-blue-50 file:text-blue-700
-                            hover:file:bg-blue-100"
-                        />
-                        {isUploading && <p className="text-sm text-gray-500 mt-2">Uploading images...</p>}
-                      </div>
+                        {/* File Upload Section */}
+                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+                          <input
+                            type="file"
+                            multiple
+                            accept="image/*"
+                            onChange={handleImageUpload}
+                            className="block w-full text-sm text-gray-700
+                              file:mr-4 file:py-2 file:px-4
+                              file:rounded-full file:border-0
+                              file:text-sm file:font-semibold
+                              file:bg-blue-50 file:text-blue-700
+                              hover:file:bg-blue-100"
+                          />
+                          {isUploading && <p className="text-sm text-gray-500 mt-2">Uploading images...</p>}
+                        </div>
 
-                      {/* Image Previews */}
-                      <div className="grid grid-cols-3 gap-2">
-                        {newItem.image_urls.map((url, index) => (
-                          <div key={index} className="relative group">
-                            <img 
-                              src={url} 
-                              alt={`Preview ${index + 1}`} 
-                              className="w-full h-24 object-cover rounded"
-                              onError={(e) => {
-                                console.error(`Failed to load preview image: ${url}`);
-                                e.target.onerror = null;
-                                e.target.src = '/placeholder.jpg';
-                              }}
-                            />
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveImage(index)}
-                              className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                            >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                              </svg>
-                            </button>
-                          </div>
-                        ))}
+                        {/* Image Previews */}
+                        <div className="grid grid-cols-3 gap-2">
+                          {newItem.image_urls.map((url, index) => (
+                            <div key={index} className="relative group">
+                              <img 
+                                src={url} 
+                                alt={`Preview ${index + 1}`} 
+                                className="w-full h-24 object-cover rounded"
+                                onError={(e) => {
+                                  console.error(`Failed to load preview image: ${url}`);
+                                  e.target.onerror = null;
+                                  e.target.src = '/placeholder.jpg';
+                                }}
+                              />
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveImage(index)}
+                                className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                              </button>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-black">Description</label>
-                  <textarea
-                    value={newItem.description}
-                    onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-black"
-                    rows="3"
-                    required
-                  />
-                </div>
-                <div className="flex justify-end">
-                  <button
-                    type="submit"
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                  >
-                    Add Item
-                  </button>
-                </div>
-              </form>
+                  <div>
+                    <label className="block text-sm font-medium text-black">Description</label>
+                    <textarea
+                      value={newItem.description}
+                      onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900 bg-white placeholder:text-gray-500"
+                      rows="3"
+                      required
+                    />
+                  </div>
+                  <div className="flex justify-end">
+                    <button
+                      type="submit"
+                      className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    >
+                      Add Item
+                    </button>
+                  </div>
+                </form>
+              </div>
             </div>
 
             {/* Menu Items List */}
@@ -444,11 +446,11 @@ export default function MenuManagement() {
                 <h2 className="text-2xl font-bold text-black">Menu Items</h2>
                 <div className="flex items-center space-x-4 bg-gray-200 p-3 rounded-lg shadow-sm">
                   <div className="flex items-center space-x-2">
-                    <label className="text-sm font-medium text-gray-700">Sort by:</label>
+                    <label className="text-sm font-medium text-gray-800">Sort by:</label>
                     <select
                       value={sortField}
                       onChange={(e) => setSortField(e.target.value)}
-                      className="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-black bg-white px-3 py-1.5"
+                      className="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900 bg-white px-3 py-1.5"
                     >
                       <option value="price">Price</option>
                       <option value="category">Category</option>
@@ -456,11 +458,11 @@ export default function MenuManagement() {
                     </select>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <label className="text-sm font-medium text-gray-700">Order:</label>
+                    <label className="text-sm font-medium text-gray-800">Order:</label>
                     <select
                       value={sortDirection}
                       onChange={(e) => setSortDirection(e.target.value)}
-                      className="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-black bg-white px-3 py-1.5"
+                      className="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900 bg-white px-3 py-1.5 border border-gray-400"
                     >
                       <option value="asc">Ascending</option>
                       <option value="desc">Descending</option>
@@ -582,133 +584,135 @@ export default function MenuManagement() {
 
         {/* Edit Item Modal */}
         {editingItem && (
-          <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4">
-            <div className="bg-white rounded-lg p-6 max-w-md w-full">
-              <h2 className="text-xl font-bold mb-4 text-black">Edit Menu Item</h2>
-              <form onSubmit={handleUpdateItem} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-black">Name</label>
-                  <input
-                    type="text"
-                    value={newItem.name}
-                    onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-black"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-black">Description</label>
-                  <textarea
-                    value={newItem.description}
-                    onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-black"
-                    rows="3"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-black">Price</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={newItem.price}
-                    onChange={(e) => setNewItem({ ...newItem, price: e.target.value })}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-black"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-black">Category</label>
-                  <input
-                    type="text"
-                    value={newItem.category}
-                    onChange={(e) => setNewItem({ ...newItem, category: e.target.value })}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-black"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-black">Images</label>
-                  <div className="mt-2 space-y-4">
-                    {/* URL Input Section */}
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={imageUrlInput}
-                        onChange={(e) => setImageUrlInput(e.target.value)}
-                        placeholder="Paste image URL here"
-                        className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-black"
-                      />
-                      <button
-                        type="button"
-                        onClick={handleAddImageUrl}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                      >
-                        Add URL
-                      </button>
-                    </div>
+          <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-gray-300 shadow-lg">
+              <div className="bg-gray-50 p-6 rounded-t-lg border-b border-gray-200">
+                <h2 className="text-xl font-bold mb-4 text-black">Edit Menu Item</h2>
+                <form onSubmit={handleUpdateItem} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-black">Name</label>
+                    <input
+                      type="text"
+                      value={newItem.name}
+                      onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900 bg-white placeholder:text-gray-500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-black">Description</label>
+                    <textarea
+                      value={newItem.description}
+                      onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900 bg-white placeholder:text-gray-500"
+                      rows="3"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-black">Price</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={newItem.price}
+                      onChange={(e) => setNewItem({ ...newItem, price: e.target.value })}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900 bg-white placeholder:text-gray-500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-black">Category</label>
+                    <input
+                      type="text"
+                      value={newItem.category}
+                      onChange={(e) => setNewItem({ ...newItem, category: e.target.value })}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900 bg-white placeholder:text-gray-500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-black">Images</label>
+                    <div className="mt-2 space-y-4">
+                      {/* URL Input Section */}
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={imageUrlInput}
+                          onChange={(e) => setImageUrlInput(e.target.value)}
+                          placeholder="Paste image URL here"
+                          className="flex-1 rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900 bg-white border border-gray-400 placeholder:text-gray-500 py-2 px-3"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleAddImageUrl}
+                          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                        >
+                          Add URL
+                        </button>
+                      </div>
 
-                    {/* File Upload Section */}
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
-                      <input
-                        type="file"
-                        multiple
-                        accept="image/*"
-                        onChange={handleImageUpload}
-                        className="block w-full text-sm text-gray-500
-                          file:mr-4 file:py-2 file:px-4
-                          file:rounded-full file:border-0
-                          file:text-sm file:font-semibold
-                          file:bg-blue-50 file:text-blue-700
-                          hover:file:bg-blue-100"
-                      />
-                      {isUploading && <p className="text-sm text-gray-500 mt-2">Uploading images...</p>}
-                    </div>
+                      {/* File Upload Section */}
+                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+                        <input
+                          type="file"
+                          multiple
+                          accept="image/*"
+                          onChange={handleImageUpload}
+                          className="block w-full text-sm text-gray-700
+                            file:mr-4 file:py-2 file:px-4
+                            file:rounded-full file:border-0
+                            file:text-sm file:font-semibold
+                            file:bg-blue-50 file:text-blue-700
+                            hover:file:bg-blue-100"
+                        />
+                        {isUploading && <p className="text-sm text-gray-500 mt-2">Uploading images...</p>}
+                      </div>
 
-                    {/* Image Previews */}
-                    <div className="grid grid-cols-3 gap-2">
-                      {newItem.image_urls.map((url, index) => (
-                        <div key={index} className="relative group">
-                          <img 
-                            src={url} 
-                            alt={`Preview ${index + 1}`} 
-                            className="w-full h-24 object-cover rounded"
-                            onError={(e) => {
-                              console.error(`Failed to load preview image: ${url}`);
-                              e.target.onerror = null;
-                              e.target.src = '/placeholder.jpg';
-                            }}
-                          />
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveImage(index)}
-                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                          </button>
-                        </div>
-                      ))}
+                      {/* Image Previews */}
+                      <div className="grid grid-cols-3 gap-2">
+                        {newItem.image_urls.map((url, index) => (
+                          <div key={index} className="relative group">
+                            <img 
+                              src={url} 
+                              alt={`Preview ${index + 1}`} 
+                              className="w-full h-24 object-cover rounded"
+                              onError={(e) => {
+                                console.error(`Failed to load preview image: ${url}`);
+                                e.target.onerror = null;
+                                e.target.src = '/placeholder.jpg';
+                              }}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveImage(index)}
+                              className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div className="flex justify-end space-x-3">
-                  <button
-                    type="button"
-                    onClick={() => setEditingItem(null)}
-                    className="px-4 py-2 text-sm font-medium text-black bg-gray-100 rounded-md hover:bg-gray-200"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
-                  >
-                    Update Item
-                  </button>
-                </div>
-              </form>
+                  <div className="flex justify-end space-x-3">
+                    <button
+                      type="button"
+                      onClick={() => setEditingItem(null)}
+                      className="px-4 py-2 text-sm font-medium text-black bg-gray-100 rounded-md hover:bg-gray-200"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+                    >
+                      Update Item
+                    </button>
+                  </div>
+                </form>
+              </div>
             </div>
           </div>
         )}

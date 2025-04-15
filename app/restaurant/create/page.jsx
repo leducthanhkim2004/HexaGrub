@@ -192,7 +192,7 @@ export default function CreateRestaurantPage() {
             </div>
           )}
           
-          <form onSubmit={handleSubmit} className="bg-white shadow-md rounded-lg p-6">
+          <form onSubmit={handleSubmit} className="bg-gray-50 shadow-md rounded-lg p-6 border border-gray-200">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <div>
                 <label className="block text-sm font-medium text-black mb-1">
@@ -203,7 +203,7 @@ export default function CreateRestaurantPage() {
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-black placeholder-gray-400"
+                  className="w-full px-3 py-2 border border-gray-400 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white placeholder-gray-500"
                   required
                 />
               </div>
@@ -217,7 +217,7 @@ export default function CreateRestaurantPage() {
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-black placeholder-gray-400"
+                  className="w-full px-3 py-2 border border-gray-400 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white placeholder-gray-500"
                 />
               </div>
               
@@ -230,7 +230,7 @@ export default function CreateRestaurantPage() {
                   name="phone"
                   value={formData.phone}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-black placeholder-gray-400"
+                  className="w-full px-3 py-2 border border-gray-400 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white placeholder-gray-500"
                 />
               </div>
               
@@ -243,7 +243,7 @@ export default function CreateRestaurantPage() {
                   name="address"
                   value={formData.address}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-black placeholder-gray-400"
+                  className="w-full px-3 py-2 border border-gray-400 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white placeholder-gray-500"
                   required
                 />
               </div>
@@ -257,7 +257,7 @@ export default function CreateRestaurantPage() {
                   value={formData.description}
                   onChange={handleChange}
                   rows="3"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-black placeholder-gray-400"
+                  className="w-full px-3 py-2 border border-gray-400 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white placeholder-gray-500"
                 ></textarea>
               </div>
               
@@ -270,7 +270,7 @@ export default function CreateRestaurantPage() {
                     type="file"
                     accept="image/*"
                     onChange={(e) => handleImageUpload(e, 'logo')}
-                    className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                    className="w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                   />
                   <p className="text-sm text-gray-500">Recommended size: 200x200 pixels</p>
                   {logoPreview && !showLogoCropper && (
@@ -295,7 +295,7 @@ export default function CreateRestaurantPage() {
                     type="file"
                     accept="image/*"
                     onChange={(e) => handleImageUpload(e, 'cover')}
-                    className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                    className="w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                   />
                   <p className="text-sm text-gray-500">Recommended size: 1200x400 pixels</p>
                   {coverPreview && !showCoverCropper && (
@@ -396,7 +396,7 @@ export default function CreateRestaurantPage() {
                     type="text"
                     value={hours}
                     onChange={(e) => handleOpeningHoursChange(day, e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-black placeholder-gray-400"
+                    className="w-full px-3 py-2 border border-gray-400 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white placeholder-gray-500"
                     placeholder="9:00 AM - 10:00 PM"
                   />
                 </div>

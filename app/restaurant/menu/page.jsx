@@ -197,15 +197,15 @@ export default function RestaurantMenuPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Menu Item Form */}
             <div className="lg:col-span-1">
-              <div className="bg-white shadow-md rounded-lg p-6">
+              <div className="bg-white shadow-md rounded-lg p-6 border border-gray-200">
                 <h2 className="text-xl font-semibold mb-4">
                   {isEditing ? 'Edit Menu Item' : 'Add New Menu Item'}
                 </h2>
                 
-                <form onSubmit={handleSubmit}>
+                <form onSubmit={handleSubmit} className="bg-gray-50 p-4 rounded-md">
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-800 mb-1">
                         Name *
                       </label>
                       <input
@@ -213,13 +213,13 @@ export default function RestaurantMenuPage() {
                         name="name"
                         value={formData.name}
                         onChange={handleChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full px-3 py-2 border border-gray-400 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
                         required
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-800 mb-1">
                         Description
                       </label>
                       <textarea
@@ -227,12 +227,12 @@ export default function RestaurantMenuPage() {
                         value={formData.description}
                         onChange={handleChange}
                         rows="3"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full px-3 py-2 border border-gray-400 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
                       ></textarea>
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-800 mb-1">
                         Price *
                       </label>
                       <input
@@ -242,13 +242,13 @@ export default function RestaurantMenuPage() {
                         onChange={handleChange}
                         step="0.01"
                         min="0"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full px-3 py-2 border border-gray-400 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
                         required
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-800 mb-1">
                         Category *
                       </label>
                       <input
@@ -256,13 +256,13 @@ export default function RestaurantMenuPage() {
                         name="category"
                         value={formData.category}
                         onChange={handleChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full px-3 py-2 border border-gray-400 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
                         required
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-800 mb-1">
                         Image URL
                       </label>
                       <input
@@ -270,7 +270,7 @@ export default function RestaurantMenuPage() {
                         name="image_url"
                         value={formData.image_url}
                         onChange={handleChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full px-3 py-2 border border-gray-400 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white placeholder:text-gray-500"
                         placeholder="https://example.com/image.jpg"
                       />
                     </div>
@@ -281,9 +281,9 @@ export default function RestaurantMenuPage() {
                         name="is_available"
                         checked={formData.is_available}
                         onChange={handleChange}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-400 rounded bg-white"
                       />
-                      <label className="ml-2 block text-sm text-gray-700">
+                      <label className="ml-2 block text-sm text-gray-800 font-medium">
                         Available for Order
                       </label>
                     </div>
@@ -314,7 +314,7 @@ export default function RestaurantMenuPage() {
 
             {/* Menu Items List */}
             <div className="lg:col-span-2">
-              <div className="bg-white shadow-md rounded-lg p-6">
+              <div className="bg-white shadow-md rounded-lg p-6 border border-gray-200">
                 <h2 className="text-xl font-semibold mb-4">Menu Items</h2>
                 
                 {menuItems.length === 0 ? (

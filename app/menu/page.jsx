@@ -70,7 +70,7 @@ export default function MenuPage() {
             return (
               <div
                 key={item.id}
-                className="bg-white rounded-lg shadow-lg overflow-hidden cursor-pointer hover:shadow-xl transition-shadow duration-300"
+                className="bg-white rounded-lg shadow-lg overflow-hidden cursor-pointer hover:shadow-xl transition-shadow duration-300 border border-gray-200"
                 onClick={() => setSelectedItem(item)}
               >
                 <div className="relative h-64">
@@ -90,13 +90,13 @@ export default function MenuPage() {
                   )}
                 </div>
                 
-                <div className="p-4">
-                  <h3 className="text-xl font-semibold mb-2">{item.name}</h3>
-                  <p className="text-gray-600 mb-4 line-clamp-2">{item.description}</p>
+                <div className="p-4 bg-white">
+                  <h3 className="text-xl font-bold text-gray-900 mb-2 drop-shadow-sm">{item.name}</h3>
+                  <p className="text-gray-700 mb-4 line-clamp-2">{item.description}</p>
                   <div className="flex justify-between items-center">
-                    <span className="text-xl font-bold">${parseFloat(item.price).toFixed(2)}</span>
+                    <span className="text-xl font-bold text-gray-900 drop-shadow-sm">${parseFloat(item.price).toFixed(2)}</span>
                     <button 
-                      className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
+                      className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors border border-blue-700"
                       onClick={(e) => {
                         e.stopPropagation();
                         // Add to cart functionality here
@@ -117,7 +117,7 @@ export default function MenuPage() {
             <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
               <div className="p-6">
                 <div className="flex justify-between items-start mb-6">
-                  <h2 className="text-2xl font-bold">{selectedItem.name}</h2>
+                  <h2 className="text-2xl font-extrabold text-gray-900 drop-shadow-sm">{selectedItem.name}</h2>
                   <button
                     onClick={() => setSelectedItem(null)}
                     className="text-gray-500 hover:text-gray-700"
@@ -149,8 +149,8 @@ export default function MenuPage() {
                   {/* Item Details */}
                   <div className="space-y-4">
                     <p className="text-gray-600">{selectedItem.description}</p>
-                    <p className="text-2xl font-bold">${parseFloat(selectedItem.price).toFixed(2)}</p>
-                    <p className="text-gray-500">Category: {selectedItem.category}</p>
+                    <p className="text-2xl font-bold text-gray-900 drop-shadow-sm">${parseFloat(selectedItem.price).toFixed(2)}</p>
+                    <p className="text-gray-600 font-medium">Category: {selectedItem.category}</p>
                   </div>
                 </div>
               </div>

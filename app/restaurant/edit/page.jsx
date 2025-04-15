@@ -156,7 +156,7 @@ export default function EditRestaurantPage() {
         <div className="max-w-3xl mx-auto">
           <h1 className="text-3xl font-bold text-black mb-8">Edit Restaurant</h1>
           
-          <form onSubmit={handleSubmit} className="bg-white shadow-md rounded-lg p-6">
+          <form onSubmit={handleSubmit} className="bg-gray-50 p-4 rounded-md">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <div>
                 <label className="block text-sm font-medium text-black mb-1">
@@ -167,7 +167,7 @@ export default function EditRestaurantPage() {
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-black placeholder-gray-400"
+                  className="w-full px-3 py-2 border border-gray-400 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white placeholder-gray-500"
                   required
                 />
               </div>
@@ -181,7 +181,7 @@ export default function EditRestaurantPage() {
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-black placeholder-gray-400"
+                  className="w-full px-3 py-2 border border-gray-400 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white placeholder-gray-500"
                 />
               </div>
               
@@ -194,7 +194,7 @@ export default function EditRestaurantPage() {
                   name="phone"
                   value={formData.phone}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-black placeholder-gray-400"
+                  className="w-full px-3 py-2 border border-gray-400 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white placeholder-gray-500"
                 />
               </div>
               
@@ -207,7 +207,7 @@ export default function EditRestaurantPage() {
                   name="address"
                   value={formData.address}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-black placeholder-gray-400"
+                  className="w-full px-3 py-2 border border-gray-400 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white placeholder-gray-500"
                   required
                 />
               </div>
@@ -221,7 +221,7 @@ export default function EditRestaurantPage() {
                   value={formData.description}
                   onChange={handleChange}
                   rows="3"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-black placeholder-gray-400"
+                  className="w-full px-3 py-2 border border-gray-400 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white placeholder-gray-500"
                 ></textarea>
               </div>
               
@@ -234,7 +234,7 @@ export default function EditRestaurantPage() {
                   name="logo_url"
                   value={formData.logo_url}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-black placeholder-gray-400"
+                  className="w-full px-3 py-2 border border-gray-400 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white placeholder-gray-500"
                 />
               </div>
               
@@ -247,7 +247,7 @@ export default function EditRestaurantPage() {
                   name="cover_image_url"
                   value={formData.cover_image_url}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-black placeholder-gray-400"
+                  className="w-full px-3 py-2 border border-gray-400 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white placeholder-gray-500"
                 />
               </div>
             </div>
@@ -263,7 +263,7 @@ export default function EditRestaurantPage() {
                     type="text"
                     value={hours}
                     onChange={(e) => handleOpeningHoursChange(day, e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-black placeholder-gray-400"
+                    className="w-full px-3 py-2 border border-gray-400 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white placeholder-gray-500"
                     placeholder="9:00 AM - 10:00 PM"
                   />
                 </div>
