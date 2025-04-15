@@ -22,6 +22,8 @@ export default function MenuManagement() {
   const [editingItem, setEditingItem] = useState(null);
   const [selectedItem, setSelectedItem] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [imageUrls, setImageUrls] = useState([]);
+  const [imageUrlInput, setImageUrlInput] = useState('');
   const router = useRouter();
 
   useEffect(() => {
@@ -83,7 +85,6 @@ export default function MenuManagement() {
 
         console.log('Uploading file:', filePath);
 
-        // Upload the file
         const { error: uploadError } = await supabase.storage
           .from('menu-images')
           .upload(filePath, file, {
@@ -96,7 +97,6 @@ export default function MenuManagement() {
           throw uploadError;
         }
 
-        // Get the public URL using the correct method
         const { data } = supabase.storage
           .from('menu-images')
           .getPublicUrl(filePath);
@@ -113,6 +113,7 @@ export default function MenuManagement() {
         ...prev,
         image_urls: [...(prev.image_urls || []), ...uploadedUrls]
       }));
+      setImageUrls(prev => [...prev, ...uploadedUrls]);
     } catch (error) {
       console.error('Error uploading images:', error);
       setError('Failed to upload images');
@@ -121,11 +122,23 @@ export default function MenuManagement() {
     }
   };
 
+  const handleAddImageUrl = () => {
+    if (imageUrlInput.trim()) {
+      setNewItem(prev => ({
+        ...prev,
+        image_urls: [...(prev.image_urls || []), imageUrlInput.trim()]
+      }));
+      setImageUrls(prev => [...prev, imageUrlInput.trim()]);
+      setImageUrlInput('');
+    }
+  };
+
   const handleRemoveImage = (index) => {
     setNewItem(prev => ({
       ...prev,
       image_urls: prev.image_urls.filter((_, i) => i !== index)
     }));
+    setImageUrls(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleCreateItem = async (e) => {
@@ -339,35 +352,69 @@ export default function MenuManagement() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-black">Images</label>
-                    <div className="mt-2 grid grid-cols-3 gap-2">
-                      {newItem.image_urls.map((url, index) => (
-                        <div key={index} className="relative">
-                          <img src={url} alt={`Preview ${index + 1}`} className="w-full h-24 object-cover rounded" />
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveImage(index)}
-                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1"
-                          >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                          </button>
-                        </div>
-                      ))}
+                    <div className="mt-2 space-y-4">
+                      {/* URL Input Section */}
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={imageUrlInput}
+                          onChange={(e) => setImageUrlInput(e.target.value)}
+                          placeholder="Paste image URL here"
+                          className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-black"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleAddImageUrl}
+                          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                        >
+                          Add URL
+                        </button>
+                      </div>
+
+                      {/* File Upload Section */}
+                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+                        <input
+                          type="file"
+                          multiple
+                          accept="image/*"
+                          onChange={handleImageUpload}
+                          className="block w-full text-sm text-gray-500
+                            file:mr-4 file:py-2 file:px-4
+                            file:rounded-full file:border-0
+                            file:text-sm file:font-semibold
+                            file:bg-blue-50 file:text-blue-700
+                            hover:file:bg-blue-100"
+                        />
+                        {isUploading && <p className="text-sm text-gray-500 mt-2">Uploading images...</p>}
+                      </div>
+
+                      {/* Image Previews */}
+                      <div className="grid grid-cols-3 gap-2">
+                        {newItem.image_urls.map((url, index) => (
+                          <div key={index} className="relative group">
+                            <img 
+                              src={url} 
+                              alt={`Preview ${index + 1}`} 
+                              className="w-full h-24 object-cover rounded"
+                              onError={(e) => {
+                                console.error(`Failed to load preview image: ${url}`);
+                                e.target.onerror = null;
+                                e.target.src = '/placeholder.jpg';
+                              }}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveImage(index)}
+                              className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                    <input
-                      type="file"
-                      multiple
-                      accept="image/*"
-                      onChange={handleImageUpload}
-                      className="mt-2 block w-full text-sm text-gray-500
-                        file:mr-4 file:py-2 file:px-4
-                        file:rounded-full file:border-0
-                        file:text-sm file:font-semibold
-                        file:bg-blue-50 file:text-blue-700
-                        hover:file:bg-blue-100"
-                    />
-                    {isUploading && <p className="text-sm text-gray-500">Uploading images...</p>}
                   </div>
                 </div>
                 <div>
@@ -582,35 +629,69 @@ export default function MenuManagement() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-black">Images</label>
-                  <div className="mt-2 grid grid-cols-3 gap-2">
-                    {newItem.image_urls.map((url, index) => (
-                      <div key={index} className="relative">
-                        <img src={url} alt={`Preview ${index + 1}`} className="w-full h-24 object-cover rounded" />
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveImage(index)}
-                          className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </button>
-                      </div>
-                    ))}
+                  <div className="mt-2 space-y-4">
+                    {/* URL Input Section */}
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={imageUrlInput}
+                        onChange={(e) => setImageUrlInput(e.target.value)}
+                        placeholder="Paste image URL here"
+                        className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-black"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleAddImageUrl}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                      >
+                        Add URL
+                      </button>
+                    </div>
+
+                    {/* File Upload Section */}
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+                      <input
+                        type="file"
+                        multiple
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        className="block w-full text-sm text-gray-500
+                          file:mr-4 file:py-2 file:px-4
+                          file:rounded-full file:border-0
+                          file:text-sm file:font-semibold
+                          file:bg-blue-50 file:text-blue-700
+                          hover:file:bg-blue-100"
+                      />
+                      {isUploading && <p className="text-sm text-gray-500 mt-2">Uploading images...</p>}
+                    </div>
+
+                    {/* Image Previews */}
+                    <div className="grid grid-cols-3 gap-2">
+                      {newItem.image_urls.map((url, index) => (
+                        <div key={index} className="relative group">
+                          <img 
+                            src={url} 
+                            alt={`Preview ${index + 1}`} 
+                            className="w-full h-24 object-cover rounded"
+                            onError={(e) => {
+                              console.error(`Failed to load preview image: ${url}`);
+                              e.target.onerror = null;
+                              e.target.src = '/placeholder.jpg';
+                            }}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveImage(index)}
+                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <input
-                    type="file"
-                    multiple
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    className="mt-2 block w-full text-sm text-gray-500
-                      file:mr-4 file:py-2 file:px-4
-                      file:rounded-full file:border-0
-                      file:text-sm file:font-semibold
-                      file:bg-blue-50 file:text-blue-700
-                      hover:file:bg-blue-100"
-                  />
-                  {isUploading && <p className="text-sm text-gray-500">Uploading images...</p>}
                 </div>
                 <div className="flex justify-end space-x-3">
                   <button

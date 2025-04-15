@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { supabase } from '../lib/supabase';
+import { supabase } from '../../utils/supabase/client';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -25,23 +25,25 @@ export default function Login() {
 
       if (error) throw error;
 
-      const { data: orderData } = await supabase
-        .from('orders')
-        .insert({
-          profile_id: data.user.id,
-          total_amount: 0,
-          status: 'completed',
-        })
-        .select();
+      // Get user's role from profiles table
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', data.user.id)
+        .single();
 
-      if (orderData.length === 0) {
-        throw new Error('Order creation failed');
+      // Redirect based on role
+      if (profile?.role === 'restaurant_owner') {
+        router.push('/restaurant/dashboard');
+      } else if (profile?.role === 'admin') {
+        router.push('/admin/dashboard');
+      } else {
+        router.push('/'); // Redirect customers to home page
       }
-
-      router.push('/'); // Redirect to home page after successful login
+      
       router.refresh();
     } catch (error) {
-      console.error('Error creating order:', error);
+      console.error('Error signing in:', error);
       setError(error.message);
     } finally {
       setLoading(false);
@@ -105,7 +107,7 @@ export default function Login() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-black bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
               >
                 {loading ? 'Signing in...' : 'Sign in'}
               </button>
@@ -127,8 +129,8 @@ export default function Login() {
             <div className="mt-6">
               <Link
                 href="/signup"
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-blue-600 bg-gray-200  focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" >
-              
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-blue-600 bg-gray-200 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
                 Sign up
               </Link>
             </div>
