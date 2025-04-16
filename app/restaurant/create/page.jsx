@@ -33,17 +33,8 @@ export default function CreateRestaurantPage() {
     address: '',
     phone: '',
     email: '',
-    logo_url: '',
     cover_image_url: '',
-    opening_hours: {
-      monday: { open: '09:00', close: '22:00' },
-      tuesday: { open: '09:00', close: '22:00' },
-      wednesday: { open: '09:00', close: '22:00' },
-      thursday: { open: '09:00', close: '22:00' },
-      friday: { open: '09:00', close: '22:00' },
-      saturday: { open: '09:00', close: '22:00' },
-      sunday: { open: '09:00', close: '22:00' }
-    }
+    logo_url: ''
   });
 
   useEffect(() => {
@@ -437,24 +428,6 @@ export default function CreateRestaurantPage() {
                 </div>
               </div>
             )}
-            
-            <h2 className="text-xl font-semibold text-black mb-4">Opening Hours</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-              {Object.entries(formData.opening_hours).map(([day, hours]) => (
-                <div key={day}>
-                  <label className="block text-sm font-medium text-black mb-1 capitalize">
-                    {day}
-                  </label>
-                  <input
-                    type="text"
-                    value={hours.open + ' - ' + hours.close}
-                    onChange={(e) => handleChange({ target: { name: day, value: e.target.value } })}
-                    className="w-full px-3 py-2 border border-gray-400 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white placeholder-gray-500"
-                    placeholder="9:00 AM - 10:00 PM"
-                  />
-                </div>
-              ))}
-            </div>
             
             <div className="flex justify-end">
               <button

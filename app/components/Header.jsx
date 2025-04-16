@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCart } from '../context/CartContext';
@@ -9,6 +9,7 @@ import { supabase } from '../lib/supabase';
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { useAuth } from '../context/AuthContext';
 
 export const notify = () => toast.success('Item added to cart!', {
   position: 'top-right',
@@ -21,104 +22,48 @@ export const notify = () => toast.success('Item added to cart!', {
 });
 
 export default function Header() {
-  const { cart } = useCart();
+  const { cart, clearCart } = useCart();
   const router = useRouter();
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [user, setUser] = useState(null);
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const profileRef = useRef(null);
+  const { user, loading, error, setUser } = useAuth();
 
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
 
-  useEffect(() => {
-    let mounted = true;
-    let authListener = null;
-
-    const initializeAuth = async () => {
-      try {
-        console.log('Initializing auth...');
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-
-        if (sessionError) {
-          console.error('Session error:', sessionError);
-          throw sessionError;
-        }
-
-        if (mounted) {
-          if (session?.user) {
-            console.log('Session found:', session.user.id);
-            setUser(session.user);
-          } else {
-            console.log('No session found');
-            setUser(null);
-          }
-        }
-      } catch (error) {
-        console.error('Auth initialization error:', error);
-        if (mounted) {
-          setError(error.message);
-        }
-      } finally {
-        if (mounted) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    // Initialize auth
-    initializeAuth();
-
-    // Set up auth state listener
-    authListener = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state changed:', event, session?.user?.id);
-      
-      if (!mounted) return;
-
-      if (session?.user) {
-        setUser(session.user);
-      } else {
-        setUser(null);
-      }
-      
-      setIsLoading(false);
-    });
-
-    return () => {
-      mounted = false;
-      if (authListener) {
-        authListener.data.subscription.unsubscribe();
-      }
-    };
-  }, []);
-
   const handleSignOut = async () => {
     try {
-      setError(null);
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       
+      // Clear all states
       setUser(null);
+      clearCart();
+      setIsCartOpen(false);
+      
+      // Navigate to home page
       router.push('/');
+      
+      // Force a full page reload to clear all states
+      window.location.reload();
     } catch (error) {
       console.error('Error signing out:', error);
-      setError(error.message);
+      toast.error('Failed to sign out. Please try again.');
     }
   };
 
   return (
     <>
       <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full px-4">
           <div className="flex justify-between h-16 items-center">
+            {/* Left side - Logo */}
             <div className="flex-shrink-0">
               <Link href="/" className="text-xl font-bold text-gray-900">
                 HexaGrub
               </Link>
             </div>
 
-            <nav className="flex items-center space-x-4">
+            {/* Right side - Navigation */}
+            <div className="flex items-center space-x-4">
               {user ? (
                 <>
                   <Link
@@ -172,7 +117,7 @@ export default function Header() {
                   </span>
                 )}
               </button>
-            </nav>
+            </div>
           </div>
         </div>
       </header>

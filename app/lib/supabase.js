@@ -7,27 +7,54 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables')
 }
 
-// Create a single instance of Supabase client
-let supabase;
+// Create a single supabase client for interacting with your database
+const createSupabaseClient = () => {
+  if (typeof window !== 'undefined' && window.supabase) {
+    return window.supabase;
+  }
 
-if (!supabase) {
-  supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  const client = createClient(supabaseUrl, supabaseAnonKey, {
     auth: {
-      storageKey: 'food-delivery-auth', // Unique storage key for this app
-      persistSession: true, // Enable session persistence
-      detectSessionInUrl: true, // Enable OAuth detection from URL
-      autoRefreshToken: true, // Enable automatic token refresh
+      persistSession: true,
+      storageKey: 'hexagrub-auth-token',
+      storage: {
+        getItem: (key) => {
+          if (typeof window === 'undefined') {
+            return null;
+          }
+          return window.localStorage.getItem(key);
+        },
+        setItem: (key, value) => {
+          if (typeof window !== 'undefined') {
+            window.localStorage.setItem(key, value);
+          }
+        },
+        removeItem: (key) => {
+          if (typeof window !== 'undefined') {
+            window.localStorage.removeItem(key);
+          }
+        },
+      },
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+      flowType: 'pkce',
+      debug: process.env.NODE_ENV === 'development',
     },
+    cookies: {
+      name: 'hexagrub-auth',
+      lifetime: 60 * 60 * 8, // 8 hours
+      domain: typeof window !== 'undefined' ? window.location.hostname : '',
+      path: '/',
+      sameSite: 'Lax'
+    }
   });
-}
 
-// Ensure we're exporting the same instance
-export { supabase };
+  if (typeof window !== 'undefined') {
+    window.supabase = client;
+  }
 
-// Prevent multiple instances
-if (typeof window !== 'undefined') {
-  // @ts-ignore
-  window.supabase = window.supabase || supabase
-}
+  return client;
+};
 
-export default supabase 
+export const supabase = createSupabaseClient();
+export default supabase; 

@@ -16,17 +16,8 @@ export default function EditRestaurantPage() {
     address: '',
     phone: '',
     email: '',
-    logo_url: '',
     cover_image_url: '',
-    opening_hours: {
-      monday: '',
-      tuesday: '',
-      wednesday: '',
-      thursday: '',
-      friday: '',
-      saturday: '',
-      sunday: ''
-    }
+    logo_url: ''
   });
 
   useEffect(() => {
@@ -67,17 +58,8 @@ export default function EditRestaurantPage() {
         address: restaurant.address || '',
         phone: restaurant.phone || '',
         email: restaurant.email || '',
-        logo_url: restaurant.logo_url || '',
         cover_image_url: restaurant.cover_image_url || '',
-        opening_hours: restaurant.opening_hours || {
-          monday: '',
-          tuesday: '',
-          wednesday: '',
-          thursday: '',
-          friday: '',
-          saturday: '',
-          sunday: ''
-        }
+        logo_url: restaurant.logo_url || ''
       });
     } catch (error) {
       console.error('Error fetching restaurant:', error);
@@ -92,16 +74,6 @@ export default function EditRestaurantPage() {
     setFormData(prev => ({
       ...prev,
       [name]: value
-    }));
-  };
-
-  const handleOpeningHoursChange = (day, value) => {
-    setFormData(prev => ({
-      ...prev,
-      opening_hours: {
-        ...prev.opening_hours,
-        [day]: value
-      }
     }));
   };
 
@@ -250,24 +222,6 @@ export default function EditRestaurantPage() {
                   className="w-full px-3 py-2 border border-gray-400 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white placeholder-gray-500"
                 />
               </div>
-            </div>
-            
-            <h2 className="text-xl font-semibold text-black mb-4">Opening Hours</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-              {Object.entries(formData.opening_hours).map(([day, hours]) => (
-                <div key={day}>
-                  <label className="block text-sm font-medium text-black mb-1 capitalize">
-                    {day}
-                  </label>
-                  <input
-                    type="text"
-                    value={hours}
-                    onChange={(e) => handleOpeningHoursChange(day, e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-400 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white placeholder-gray-500"
-                    placeholder="9:00 AM - 10:00 PM"
-                  />
-                </div>
-              ))}
             </div>
             
             <div className="flex justify-end">

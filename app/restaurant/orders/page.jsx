@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '../../lib/supabase';
+import { useAuth } from '../../context/AuthContext';
 import Header from '../../components/Header';
 
 export default function RestaurantOrdersPage() {
@@ -10,36 +11,66 @@ export default function RestaurantOrdersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const router = useRouter();
+  const { user } = useAuth();
 
   useEffect(() => {
+    if (!user) {
+      console.log('No user found, redirecting to login');
+      router.push('/login');
+      return;
+    }
+
+    console.log('Current user:', user.id);
     fetchOrders();
-    // Refresh orders every 30 seconds
+
+    // Set up real-time subscription for orders
+    const channel = supabase
+      .channel('restaurant-orders')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'orders'
+        },
+        (payload) => {
+          console.log('Received order update:', payload);
+          fetchOrders();
+        }
+      )
+      .subscribe();
+
+    // Refresh orders every 30 seconds as a fallback
     const interval = setInterval(fetchOrders, 30000);
-    return () => clearInterval(interval);
-  }, []);
+
+    return () => {
+      clearInterval(interval);
+      channel.unsubscribe();
+    };
+  }, [user]);
 
   const fetchOrders = async () => {
-    try {
-      setLoading(true);
-      setError(null);
+    if (!user) return;
 
-      // Get current user's session
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError) throw sessionError;
-      if (!session) {
-        router.push('/login');
-        return;
-      }
+    try {
+      setError(null);
 
       // Get user's profile with restaurant_id
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('restaurant_id')
-        .eq('id', session.user.id)
+        .select('restaurant_id, role')
+        .eq('id', user.id)
         .single();
 
-      if (profileError) throw profileError;
+      if (profileError) {
+        console.error('Profile error:', profileError);
+        throw profileError;
+      }
+
+      console.log('User profile:', profile);
+
       if (!profile?.restaurant_id) {
+        console.log('No restaurant_id found for user');
         router.push('/restaurant/create');
         return;
       }
@@ -53,35 +84,26 @@ export default function RestaurantOrdersPage() {
             full_name,
             email,
             phone_number
+          ),
+          restaurant:restaurant_id (
+            name
           )
         `)
         .eq('restaurant_id', profile.restaurant_id)
-        .order('created_at', { ascending: false });
+        .in('status', ['pending', 'completed']);
 
-      if (ordersError) throw ordersError;
+      if (ordersError) {
+        console.error('Orders error:', ordersError);
+        throw ordersError;
+      }
+
+      console.log('Fetched orders:', ordersData);
       setOrders(ordersData || []);
     } catch (error) {
       console.error('Error fetching orders:', error);
       setError(error.message);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleUpdateStatus = async (orderId, newStatus) => {
-    try {
-      const { error } = await supabase
-        .from('orders')
-        .update({ status: newStatus })
-        .eq('id', orderId);
-
-      if (error) throw error;
-      
-      // Refresh orders after update
-      fetchOrders();
-    } catch (error) {
-      console.error('Error updating order status:', error);
-      alert('Failed to update order status. Please try again.');
     }
   };
 
@@ -149,9 +171,6 @@ export default function RestaurantOrdersPage() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Status
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
-                    </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -184,24 +203,6 @@ export default function RestaurantOrdersPage() {
                             'bg-red-100 text-red-800'}`}>
                           {order.status}
                         </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {order.status === 'pending' && (
-                          <button
-                            onClick={() => handleUpdateStatus(order.id, 'completed')}
-                            className="text-green-600 hover:text-green-900 mr-4"
-                          >
-                            Complete
-                          </button>
-                        )}
-                        {order.status === 'completed' && (
-                          <button
-                            onClick={() => handleUpdateStatus(order.id, 'pending')}
-                            className="text-yellow-600 hover:text-yellow-900"
-                          >
-                            Reopen
-                          </button>
-                        )}
                       </td>
                     </tr>
                   ))}

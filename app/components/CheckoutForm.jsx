@@ -1,35 +1,16 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useCart } from '../context/CartContext';
 import { orderService } from '../services/orderService';
-import { supabase } from '../lib/supabase';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '../context/AuthContext';
 
 export default function CheckoutForm({ onClose }) {
   const { cart, getCartTotal, clearCart } = useCart();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const [user, setUser] = useState(null);
+  const { user } = useAuth();
   const router = useRouter();
-
-  useEffect(() => {
-    checkUser();
-  }, []);
-
-  async function checkUser() {
-    try {
-      const { data: { session }, error } = await supabase.auth.getSession();
-      if (error) throw error;
-      if (!session?.user) {
-        setError('Please log in to place an order');
-      } else {
-        setUser(session.user);
-      }
-    } catch (error) {
-      console.error('Error checking user:', error);
-      setError('Error checking authentication status');
-    }
-  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();

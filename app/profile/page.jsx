@@ -1,91 +1,28 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '../lib/supabase';
 import Header from '../components/Header';
+import { useAuth } from '../context/AuthContext';
 
 export default function ProfilePage() {
-  const [loading, setLoading] = useState(true);
+  const router = useRouter();
+  const { user, profile: authProfile, loading: authLoading, error: authError, setProfile: setAuthProfile, refreshProfile } = useAuth();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
-  const [profile, setProfile] = useState({
-    full_name: '',
-    phone_number: '',
-    address: '',
-    restaurant_id: null,
-    role: null
+  const [formData, setFormData] = useState({
+    full_name: authProfile?.full_name || '',
+    phone_number: authProfile?.phone_number || '',
+    address: authProfile?.address || '',
   });
-  const router = useRouter();
 
-  useEffect(() => {
-    let mounted = true;
-
-    const checkUser = async () => {
-      try {
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        
-        if (sessionError) throw sessionError;
-
-        if (!session?.user) {
-          router.push('/login');
-          return;
-        }
-
-        // Fetch existing profile data
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
-
-        if (profileError) {
-          if (profileError.code === 'PGRST116') {
-            // Profile not found, create a new one
-            const { data: newProfile, error: createError } = await supabase
-              .from('profiles')
-              .insert([
-                {
-                  id: session.user.id,
-                  email: session.user.email,
-                  full_name: '',
-                  phone_number: '',
-                  address: '',
-                  role: 'customer'
-                }
-              ])
-              .select()
-              .single();
-
-            if (createError) throw createError;
-            if (mounted) {
-              setProfile(newProfile);
-            }
-          } else {
-            throw profileError;
-          }
-        } else if (mounted) {
-          setProfile(profileData);
-        }
-      } catch (error) {
-        console.error('Error:', error);
-        if (mounted) {
-          setError(error.message);
-        }
-      } finally {
-        if (mounted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    checkUser();
-
-    return () => {
-      mounted = false;
-    };
-  }, [router]);
+  // Redirect if not authenticated
+  if (!authLoading && !user) {
+    router.push('/login');
+    return null;
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -94,22 +31,19 @@ export default function ProfilePage() {
     setSuccess(false);
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user) {
-        throw new Error('Not authenticated');
-      }
-
       const { error: updateError } = await supabase
         .from('profiles')
         .update({
-          full_name: profile.full_name,
-          phone_number: profile.phone_number,
-          address: profile.address
+          full_name: formData.full_name,
+          phone_number: formData.phone_number,
+          address: formData.address
         })
-        .eq('id', session.user.id);
+        .eq('id', user.id);
 
       if (updateError) throw updateError;
 
+      // Refresh the profile in context
+      await refreshProfile();
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
     } catch (error) {
@@ -121,7 +55,7 @@ export default function ProfilePage() {
   };
 
   const handleRestaurantDashboard = () => {
-    if (!profile.restaurant_id) {
+    if (!authProfile?.restaurant_id) {
       setError("You are not a restaurant owner. Please contact support if you'd like to register as a restaurant owner.");
       setTimeout(() => setError(null), 5000);
       return;
@@ -129,7 +63,7 @@ export default function ProfilePage() {
     router.push('/restaurant/dashboard');
   };
 
-  if (loading) {
+  if (authLoading) {
     return (
       <div className="min-h-screen bg-gray-50">
         <Header />
@@ -154,9 +88,9 @@ export default function ProfilePage() {
         <div className="bg-white shadow rounded-lg p-6">
           <h1 className="text-2xl font-bold text-gray-900 mb-6">Profile Settings</h1>
           
-          {error && (
+          {(error || authError) && (
             <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
-              <p className="text-sm text-red-600">{error}</p>
+              <p className="text-sm text-red-600">{error || authError}</p>
             </div>
           )}
           
@@ -189,8 +123,8 @@ export default function ProfilePage() {
               <input
                 type="text"
                 id="full_name"
-                value={profile.full_name || ''}
-                onChange={(e) => setProfile({ ...profile, full_name: e.target.value })}
+                value={formData.full_name}
+                onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 required
               />
@@ -203,8 +137,8 @@ export default function ProfilePage() {
               <input
                 type="tel"
                 id="phone_number"
-                value={profile.phone_number || ''}
-                onChange={(e) => setProfile({ ...profile, phone_number: e.target.value })}
+                value={formData.phone_number}
+                onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 required
               />
@@ -216,19 +150,21 @@ export default function ProfilePage() {
               </label>
               <textarea
                 id="address"
-                value={profile.address || ''}
-                onChange={(e) => setProfile({ ...profile, address: e.target.value })}
+                value={formData.address}
+                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                 rows={3}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 required
               />
             </div>
 
-            <div className="flex justify-end">
+            <div>
               <button
                 type="submit"
                 disabled={saving}
-                className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${
+                  saving ? 'bg-blue-400' : 'bg-blue-600 hover:bg-blue-700'
+                } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
               >
                 {saving ? 'Saving...' : 'Save Changes'}
               </button>

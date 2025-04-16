@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '../../lib/supabase';
+import { useAuth } from '../../context/AuthContext';
 import Header from '../../components/Header';
 
 export default function RestaurantDashboard() {
@@ -11,46 +12,26 @@ export default function RestaurantDashboard() {
   const [error, setError] = useState(null);
   const [isOwner, setIsOwner] = useState(false);
   const router = useRouter();
+  const { user } = useAuth();
 
   useEffect(() => {
-    let mounted = true;
-    let authListener;
-
-    const checkRestaurantOwner = async () => {
+    if (!user) {
+      router.push('/login');
+      return;
+    }
+    
+    const fetchRestaurantData = async () => {
       try {
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        
-        if (sessionError) {
-          console.error('Session error:', sessionError);
-          throw sessionError;
-        }
-
-        if (!session) {
-          console.log('No session found, redirecting to login');
-          router.push('/login');
-          return;
-        }
-
-        // Get profile data
+        // Get user's profile to check restaurant ownership
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
-          .select('role, restaurant_id')
-          .eq('id', session.user.id)
+          .select('*')
+          .eq('id', user.id)
           .single();
 
-        if (profileError) {
-          console.error('Profile error:', profileError);
-          throw new Error('Could not fetch profile data');
-        }
-
-        if (!profile || profile.role !== 'restaurant_owner') {
-          console.log('Not a restaurant owner');
-          router.push('/');
-          return;
-        }
+        if (profileError) throw profileError;
 
         if (!profile.restaurant_id) {
-          console.log('No restaurant ID found');
           router.push('/restaurant/create');
           return;
         }
@@ -62,51 +43,20 @@ export default function RestaurantDashboard() {
           .eq('id', profile.restaurant_id)
           .single();
 
-        if (restaurantError) {
-          console.error('Restaurant error:', restaurantError);
-          throw new Error('Could not fetch restaurant data');
-        }
+        if (restaurantError) throw restaurantError;
 
-        if (!restaurantData) {
-          throw new Error('Restaurant not found');
-        }
-
-        if (mounted) {
-          setRestaurant(restaurantData);
-          setIsOwner(true);
-          setLoading(false);
-          setError(null);
-        }
-      } catch (error) {
-        console.error('Dashboard error:', error);
-        if (mounted) {
-          setError(error.message);
-          setLoading(false);
-          setRestaurant(null);
-          setIsOwner(false);
-        }
+        setRestaurant(restaurantData);
+        setIsOwner(true);
+      } catch (err) {
+        console.error('Error fetching restaurant data:', err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
       }
     };
 
-    // Set up auth listener
-    authListener = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_OUT') {
-        router.push('/login');
-      } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        checkRestaurantOwner();
-      }
-    });
-
-    // Initial check
-    checkRestaurantOwner();
-
-    return () => {
-      mounted = false;
-      if (authListener) {
-        authListener.data.subscription.unsubscribe();
-      }
-    };
-  }, [router]);
+    fetchRestaurantData();
+  }, [user, router]);
 
   if (loading) {
     return (
@@ -204,23 +154,6 @@ export default function RestaurantDashboard() {
                   {restaurant.description}
                 </div>
               </div>
-            </div>
-          </div>
-
-          {/* Opening Hours */}
-          <div className="bg-white shadow-md rounded-lg p-6 mb-8">
-            <h2 className="text-xl font-semibold text-black mb-6">Opening Hours</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {restaurant.opening_hours && Object.entries(restaurant.opening_hours).map(([day, hours]) => (
-                <div key={day}>
-                  <label className="block text-sm font-medium text-black mb-1 capitalize">
-                    {day}
-                  </label>
-                  <div className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-black">
-                    {hours}
-                  </div>
-                </div>
-              ))}
             </div>
           </div>
 

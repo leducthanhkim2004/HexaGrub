@@ -1,56 +1,44 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
+import Header from '../components/Header';
 
-export default function Login() {
+export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const router = useRouter();
+  const { user } = useAuth();
 
   useEffect(() => {
-    // Check if user is already logged in
-    const checkUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        // Get user's profile
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role, restaurant_id')
-          .eq('id', user.id)
-          .single();
+    if (user) {
+      router.push('/');
+    }
+  }, [user, router]);
 
-        // Redirect based on role
-        if (profile?.role === 'restaurant_owner') {
-          router.push('/restaurant/dashboard');
-        } else if (profile?.role === 'admin') {
-          router.push('/admin/dashboard');
-        } else {
-          router.push('/');
-        }
-      }
-    };
-    checkUser();
-  }, [router]);
-
-  const handleSignIn = async (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    setError('');
     setLoading(true);
+    setError(null);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
+        options: {
+          redirectTo: `${window.location.origin}/`,
+        }
       });
 
-      if (error) throw error;
+      if (signInError) {
+        throw signInError;
+      }
 
-      // Get user's profile and check role
+      // Check user's profile for role
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('role, restaurant_id')
@@ -59,49 +47,18 @@ export default function Login() {
 
       if (profileError) {
         console.error('Error fetching profile:', profileError);
-        throw new Error('Failed to fetch user profile');
-      }
-
-      // Create profile if it doesn't exist
-      if (!profile) {
-        const { error: createError } = await supabase
-          .from('profiles')
-          .insert([
-            {
-              id: data.user.id,
-              email: data.user.email,
-              role: 'customer' // Default role
-            }
-          ]);
-
-        if (createError) {
-          console.error('Error creating profile:', createError);
-          throw new Error('Failed to create user profile');
-        }
-      }
-
-      // Store the session
-      if (data.session) {
-        localStorage.setItem('supabase.auth.token', JSON.stringify(data.session));
       }
 
       // Redirect based on role
-      if (profile?.role === 'restaurant_owner') {
-        if (profile.restaurant_id) {
-          router.push('/restaurant/dashboard');
-        } else {
-          router.push('/restaurant/create');
-        }
-      } else if (profile?.role === 'admin') {
-        router.push('/admin/dashboard');
+      if (profile?.role === 'restaurant_owner' && profile?.restaurant_id) {
+        router.push('/restaurant/dashboard');
+      } else if (profile?.role === 'restaurant_owner') {
+        router.push('/restaurant/create');
       } else {
         router.push('/');
       }
-
-      // Refresh the page to update auth state
-      router.refresh();
     } catch (error) {
-      console.error('Error signing in:', error);
+      console.error('Login error:', error);
       setError(error.message);
     } finally {
       setLoading(false);
@@ -109,92 +66,65 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-          Sign in to your account
-        </h2>
-      </div>
+    <div className="min-h-screen bg-gray-100">
+      <Header />
+      <main className="container mx-auto px-4 py-8">
+        <div className="max-w-md mx-auto">
+          <div className="bg-white shadow-md rounded-lg p-6">
+            <h1 className="text-2xl font-bold text-gray-900 mb-6">Login</h1>
+            
+            {error && (
+              <div className="bg-red-50 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                {error}
+              </div>
+            )}
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          {error && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
-              {error}
-            </div>
-          )}
-
-          <form className="space-y-6" onSubmit={handleSignIn}>
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email address
-              </label>
-              <div className="mt-1">
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                  Email
+                </label>
                 <input
                   id="email"
-                  name="email"
                   type="email"
-                  autoComplete="email"
-                  required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  required
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
-            </div>
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Password
-              </label>
-              <div className="mt-1">
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                  Password
+                </label>
                 <input
                   id="password"
-                  name="password"
                   type="password"
-                  autoComplete="current-password"
-                  required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  required
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
-            </div>
 
-            <div>
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
               >
                 {loading ? 'Signing in...' : 'Sign in'}
               </button>
-            </div>
-          </form>
 
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300" />
+              <div className="text-center mt-4">
+                <a href="/signup" className="text-blue-600 hover:text-blue-800">
+                  Don't have an account? Sign up
+                </a>
               </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">
-                  Don't have an account?
-                </span>
-              </div>
-            </div>
-
-            <div className="mt-6 text-center">
-              <Link
-                href="/signup"
-                className="font-medium text-blue-600 hover:text-blue-500"
-              >
-                Sign up
-              </Link>
-            </div>
+            </form>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

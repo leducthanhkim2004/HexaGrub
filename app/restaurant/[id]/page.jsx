@@ -14,8 +14,22 @@ export default function RestaurantPage({ params }) {
   const [error, setError] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const { addToCart } = useCart();
   const router = useRouter();
+
+  // Add keyboard event listener for Escape key
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && selectedItem) {
+        closeModal();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedItem]);
 
   useEffect(() => {
     if (!params.id) {
@@ -54,6 +68,45 @@ export default function RestaurantPage({ params }) {
                          item.description?.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   });
+
+  // Function to safely get image URL
+  const getImageUrl = (urls, index = 0) => {
+    if (!urls || !Array.isArray(urls) || !urls.length) return '/placeholder.jpg';
+    return urls[index] || '/placeholder.jpg';
+  };
+
+  const openModal = (item) => {
+    setSelectedItem(item);
+    setCurrentImageIndex(0);
+  };
+
+  const closeModal = () => {
+    setSelectedItem(null);
+    setCurrentImageIndex(0);
+  };
+
+  const nextImage = () => {
+    if (selectedItem && selectedItem.image_urls) {
+      setCurrentImageIndex((prevIndex) => 
+        (prevIndex + 1) % selectedItem.image_urls.length
+      );
+    }
+  };
+
+  const prevImage = () => {
+    if (selectedItem && selectedItem.image_urls) {
+      setCurrentImageIndex((prevIndex) => 
+        prevIndex === 0 ? selectedItem.image_urls.length - 1 : prevIndex - 1
+      );
+    }
+  };
+
+  const handleModalClick = (e) => {
+    // Close modal if clicking the overlay (outside the modal content)
+    if (e.target === e.currentTarget) {
+      closeModal();
+    }
+  };
 
   if (loading) {
     return (
@@ -104,58 +157,42 @@ export default function RestaurantPage({ params }) {
     <div className="min-h-screen bg-white">
       <Header />
       <main className="container mx-auto px-4 py-8">
-        {/* Restaurant Header */}
-        <div className="relative h-64 rounded-lg overflow-hidden mb-8">
-          <img
-            src={restaurant.cover_image_url || '/placeholder-restaurant.jpg'}
-            alt={restaurant.name}
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-black bg-opacity-40"></div>
-          <div className="absolute bottom-0 left-0 right-0 p-6">
-            <div className="flex items-end">
-              {restaurant.logo_url && (
-                <img
-                  src={restaurant.logo_url}
-                  alt={`${restaurant.name} logo`}
-                  className="w-24 h-24 rounded-full border-4 border-white"
-                />
-              )}
-              <div className="ml-4">
-                <h1 className="text-3xl font-bold text-white">{restaurant.name}</h1>
-                <p className="text-white text-sm">{restaurant.description}</p>
-              </div>
-            </div>
+        {/* Restaurant Info */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">{restaurant.name}</h1>
+          <p className="text-gray-600 mb-4">{restaurant.description}</p>
+          <div className="flex items-center text-gray-500">
+            <svg className="h-5 w-5 mr-2" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+              <path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+              <path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            </svg>
+            <span>{restaurant.address}</span>
           </div>
         </div>
 
         {/* Search and Filter */}
-        <div className="mb-8">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1">
-              <input
-                type="text"
-                placeholder="Search menu..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-4 py-2 rounded-lg border border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white shadow-sm placeholder-gray-500"
-              />
-            </div>
-            <div className="flex gap-2 overflow-x-auto pb-2">
+        <div className="mb-8 flex flex-wrap gap-4">
+          <div className="flex-1 min-w-[200px]">
+            <input
+              type="text"
+              placeholder="Search menu items..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div className="w-48">
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
               {categories.map((category) => (
-                <button
-                  key={category}
-                  onClick={() => setSelectedCategory(category)}
-                  className={`px-4 py-2 rounded-full whitespace-nowrap ${
-                    selectedCategory === category
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-white text-gray-700 hover:bg-gray-100'
-                  }`}
-                >
+                <option key={category} value={category}>
                   {category.charAt(0).toUpperCase() + category.slice(1)}
-                </button>
+                </option>
               ))}
-            </div>
+            </select>
           </div>
         </div>
 
@@ -166,12 +203,20 @@ export default function RestaurantPage({ params }) {
               key={item.id}
               className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow"
             >
-              <div className="relative h-48">
+              <div 
+                className="relative h-48 cursor-pointer" 
+                onClick={() => openModal(item)}
+              >
                 <img
-                  src={item.image_urls?.[0] || '/placeholder.jpg'}
+                  src={getImageUrl(item.image_urls)}
                   alt={item.name}
                   className="w-full h-full object-cover"
                 />
+                {item.image_urls?.length > 1 && (
+                  <div className="absolute bottom-2 right-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded-full text-sm">
+                    +{item.image_urls.length - 1} more
+                  </div>
+                )}
               </div>
               <div className="p-4">
                 <h3 className="text-xl font-bold text-gray-900 mb-2 drop-shadow-sm">{item.name}</h3>
@@ -198,68 +243,84 @@ export default function RestaurantPage({ params }) {
           </div>
         )}
 
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <div className="space-y-6">
-            <div className="border-b border-gray-200 pb-4">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Restaurant Information</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
-                    <p className="text-lg text-gray-900">{restaurant.name}</p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                    <p className="text-gray-600">{restaurant.description}</p>
+        {/* Image Gallery Modal */}
+        {selectedItem && (
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
+            onClick={handleModalClick}
+          >
+            <div className="relative bg-white rounded-lg max-w-4xl w-full">
+              <button
+                onClick={closeModal}
+                className="absolute -top-12 right-0 text-white hover:text-gray-200 z-50"
+                aria-label="Close modal"
+              >
+                <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+              <div className="p-4">
+                <div className="relative aspect-w-16 aspect-h-9">
+                  <img
+                    src={getImageUrl(selectedItem.image_urls, currentImageIndex)}
+                    alt={selectedItem.name}
+                    className="w-full h-[400px] object-cover rounded-lg"
+                  />
+                  {selectedItem.image_urls?.length > 1 && (
+                    <>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation(); // Prevent modal from closing
+                          prevImage();
+                        }}
+                        className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-75"
+                      >
+                        <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation(); // Prevent modal from closing
+                          nextImage();
+                        }}
+                        className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-75"
+                      >
+                        <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </button>
+                      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-50 text-white px-3 py-1 rounded-full">
+                        {currentImageIndex + 1} / {selectedItem.image_urls.length}
+                      </div>
+                    </>
+                  )}
+                </div>
+                <div className="mt-4">
+                  <h3 className="text-2xl font-bold text-gray-900">{selectedItem.name}</h3>
+                  <p className="text-gray-600 mt-2">{selectedItem.description}</p>
+                  <div className="flex justify-between items-center mt-4">
+                    <span className="text-2xl font-bold text-blue-700">
+                      ${parseFloat(selectedItem.price).toFixed(2)}
+                    </span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation(); // Prevent modal from closing
+                        addToCart({ ...selectedItem, restaurant_id: restaurant.id });
+                        closeModal();
+                      }}
+                      className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      Add to Cart
+                    </button>
                   </div>
                 </div>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
-                    <p className="text-gray-600">{restaurant.address}</p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Contact</label>
-                    <p className="text-gray-600">Phone: {restaurant.phone}</p>
-                    <p className="text-gray-600">Email: {restaurant.email}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="border-b border-gray-200 pb-4">
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">Opening Hours</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {Object.entries(restaurant.opening_hours || {}).map(([day, hours]) => (
-                  <div key={day} className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                    <span className="font-medium text-gray-700">{day}</span>
-                    <span className="text-gray-600">{hours}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">Menu Categories</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {categories.map((category) => (
-                  <div
-                    key={category}
-                    className="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
-                    onClick={() => setSelectedCategory(category)}
-                  >
-                    <h4 className="font-medium text-gray-900">
-                      {category.charAt(0).toUpperCase() + category.slice(1)}
-                    </h4>
-                  </div>
-                ))}
               </div>
             </div>
           </div>
-        </div>
-
-        <CartSidebar />
+        )}
       </main>
+      <CartSidebar />
     </div>
   );
 } 

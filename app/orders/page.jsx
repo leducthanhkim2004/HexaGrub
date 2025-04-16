@@ -5,36 +5,73 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '../lib/supabase';
 import PaymentButton from '../components/PaymentButton';
+import { useAuth } from '../context/AuthContext';
+import Header from '../components/Header';
 
 export default function OrdersPage() {
+  const router = useRouter();
+  const { user } = useAuth();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
+  const [error, setError] = useState(null);
 
   useEffect(() => {
+    if (!user) {
+      router.push('/login');
+      return;
+    }
+
     loadOrders();
-    // Refresh orders every 5 seconds
-    const interval = setInterval(loadOrders, 5000);
-    return () => clearInterval(interval);
-  }, []);
+    
+    // Set up real-time subscription for orders
+    const channel = supabase
+      .channel('orders-channel')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'orders',
+          filter: `profile_id=eq.${user.id}`
+        },
+        () => {
+          loadOrders();
+        }
+      )
+      .subscribe();
+
+    // Refresh orders every 30 seconds as a fallback
+    const interval = setInterval(loadOrders, 30000);
+
+    return () => {
+      clearInterval(interval);
+      channel.unsubscribe();
+    };
+  }, [user]);
 
   const loadOrders = async () => {
+    if (!user) return;
+    
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-
-      if (!user) {
-        router.push('/login');
-        return;
-      }
-
+      setError(null);
       // Fetch both pending and completed orders
-      const { data: orders } = await supabase
+      const { data: orders, error: ordersError } = await supabase
         .from('orders')
-        .select('*')
+        .select(`
+          *,
+          restaurant:restaurant_id (
+            name
+          )
+        `)
+        .eq('profile_id', user.id)
         .in('status', ['pending', 'completed'])
         .order('created_at', { ascending: false });
 
+      if (ordersError) throw ordersError;
       setOrders(orders || []);
+    } catch (err) {
+      console.error('Error loading orders:', err);
+      setError(err.message);
     } finally {
       setLoading(false);
     }
@@ -46,30 +83,25 @@ export default function OrdersPage() {
   };
 
   const handleCancelOrder = async (orderId) => {
-    // Ask for confirmation first
     if (!window.confirm('Are you sure you want to cancel this order? This action cannot be undone.')) {
       return;
     }
 
     try {
+      setError(null);
       const { error } = await supabase
         .rpc('delete_order', {
           order_id: orderId
         });
 
-      if (error) {
-        console.error('Delete error:', error);
-        throw new Error('Failed to cancel order');
-      }
+      if (error) throw error;
 
-      // Show success message
+      // Show success message and refresh orders
       alert('Order cancelled successfully');
-
-      // Refresh orders list
       loadOrders();
-    } catch (error) {
-      console.error('Error cancelling order:', error);
-      alert(error.message || 'Failed to cancel order. Please try again.');
+    } catch (err) {
+      console.error('Error cancelling order:', err);
+      setError(err.message || 'Failed to cancel order. Please try again.');
     }
   };
 
@@ -94,10 +126,15 @@ export default function OrdersPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 p-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
+            <div className="space-y-4">
+              <div className="h-32 bg-gray-200 rounded"></div>
+              <div className="h-32 bg-gray-200 rounded"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -108,14 +145,15 @@ export default function OrdersPage() {
   const successfulOrders = orders.filter(order => order.status === 'completed');
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gray-50">
+      <Header />
+      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="mb-8 flex justify-between items-center">
           <Link href="/" className="inline-flex items-center text-gray-600 hover:text-gray-900">
             <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
-            Back to Shopping
+            Back to Home Page
           </Link>
           <button
             onClick={handleRefresh}
@@ -128,6 +166,12 @@ export default function OrdersPage() {
             Refresh
           </button>
         </div>
+
+        {error && (
+          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
+            <p className="text-sm text-red-600">{error}</p>
+          </div>
+        )}
 
         {/* Pending Orders Section */}
         <div className="mb-12">
@@ -143,7 +187,9 @@ export default function OrdersPage() {
                   <div className="p-6">
                     <div className="flex justify-between items-start mb-4">
                       <div>
-                        <h3 className="text-lg font-semibold text-gray-900">Order #{order.id}</h3>
+                        <h3 className="text-lg font-semibold text-gray-900">
+                          Order #{order.id} - {order.restaurant?.name}
+                        </h3>
                         <p className="text-sm text-gray-500">
                           {new Date(order.created_at).toLocaleDateString()}
                         </p>
@@ -195,7 +241,9 @@ export default function OrdersPage() {
                   <div className="p-6">
                     <div className="flex justify-between items-start mb-4">
                       <div>
-                        <h3 className="text-lg font-semibold text-gray-900">Order #{order.id}</h3>
+                        <h3 className="text-lg font-semibold text-gray-900">
+                          Order #{order.id} - {order.restaurant?.name}
+                        </h3>
                         <p className="text-sm text-gray-500">
                           {new Date(order.created_at).toLocaleDateString()}
                         </p>
