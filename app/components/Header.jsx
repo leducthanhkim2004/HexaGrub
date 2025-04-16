@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCart } from '../context/CartContext';
 import CartSidebar from './CartSidebar';
+import NotificationBell from './NotificationBell';
 import { supabase } from '../lib/supabase';
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import { ToastContainer, toast } from 'react-toastify';
@@ -26,8 +27,32 @@ export default function Header() {
   const router = useRouter();
   const [isCartOpen, setIsCartOpen] = useState(false);
   const { user, loading, error, setUser } = useAuth();
+  const [isRestaurantOwner, setIsRestaurantOwner] = useState(false);
 
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+  useEffect(() => {
+    // Check if user is a restaurant owner
+    const checkUserRole = async () => {
+      if (user) {
+        try {
+          const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .single();
+          
+          if (!error && profile) {
+            setIsRestaurantOwner(profile.role === 'restaurant_owner');
+          }
+        } catch (err) {
+          console.error('Error checking user role:', err);
+        }
+      }
+    };
+    
+    checkUserRole();
+  }, [user]);
 
   const handleSignOut = async () => {
     try {
@@ -66,6 +91,15 @@ export default function Header() {
             <div className="flex items-center space-x-4">
               {user ? (
                 <>
+                  {isRestaurantOwner && (
+                    <Link
+                      href="/restaurant-admin"
+                      className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                    >
+                      Restaurant Dashboard
+                    </Link>
+                  )}
+                  {isRestaurantOwner && <NotificationBell />}
                   <Link
                     href="/profile"
                     className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
