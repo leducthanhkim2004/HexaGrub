@@ -1,190 +1,241 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import DashboardLayout from '../components/DashboardLayout';
 import { supabase } from '../lib/supabase';
+import Header from '../components/Header';
 
-export default function Profile() {
-  const [user, setUser] = useState(null);
-  const [isEditing, setIsEditing] = useState(false);
+export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
-  const [message, setMessage] = useState({ type: '', text: '' });
-  const [formData, setFormData] = useState({
-    fullName: '',
-    email: ''
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(false);
+  const [profile, setProfile] = useState({
+    full_name: '',
+    phone_number: '',
+    address: '',
+    restaurant_id: null,
+    role: null
   });
   const router = useRouter();
 
   useEffect(() => {
-    loadProfile();
+    let mounted = true;
+
+    const checkUser = async () => {
+      try {
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) throw sessionError;
+
+        if (!session?.user) {
+          router.push('/login');
+          return;
+        }
+
+        // Fetch existing profile data
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+
+        if (profileError) {
+          if (profileError.code === 'PGRST116') {
+            // Profile not found, create a new one
+            const { data: newProfile, error: createError } = await supabase
+              .from('profiles')
+              .insert([
+                {
+                  id: session.user.id,
+                  email: session.user.email,
+                  full_name: '',
+                  phone_number: '',
+                  address: '',
+                  role: 'customer'
+                }
+              ])
+              .select()
+              .single();
+
+            if (createError) throw createError;
+            if (mounted) {
+              setProfile(newProfile);
+            }
+          } else {
+            throw profileError;
+          }
+        } else if (mounted) {
+          setProfile(profileData);
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        if (mounted) {
+          setError(error.message);
+        }
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    checkUser();
+
+    return () => {
+      mounted = false;
+    };
   }, [router]);
 
-  async function loadProfile() {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      router.push('/login');
-      return;
-    }
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    setError(null);
+    setSuccess(false);
 
-    // Fetch profile data from profiles table
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
-      .single();
-
-    if (profileError && profileError.code !== 'PGRST116') {
-      console.error('Error loading profile:', profileError);
-    }
-
-    setUser(user);
-    setFormData({
-      fullName: profile?.full_name || user.user_metadata?.full_name || '',
-      email: user.email || ''
-    });
-    setLoading(false);
-  }
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-    // Clear any existing messages when user starts typing
-    setMessage({ type: '', text: '' });
-  };
-
-  const handleSubmit = async () => {
     try {
-      setMessage({ type: '', text: '' });
-      
-      // If the name is empty or only whitespace, show error
-      if (!formData.fullName.trim()) {
-        setMessage({ type: 'error', text: 'Full name cannot be empty' });
-        return;
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) {
+        throw new Error('Not authenticated');
       }
 
-      // Update auth metadata
-      const { error: authError } = await supabase.auth.updateUser({
-        data: {
-          full_name: formData.fullName.trim()
-        }
-      });
-
-      if (authError) throw authError;
-
-      // Update profiles table
-      const { error: profileError } = await supabase
+      const { error: updateError } = await supabase
         .from('profiles')
-        .upsert({
-          id: user.id,
-          full_name: formData.fullName.trim(),
-          updated_at: new Date().toISOString()
-        }, {
-          onConflict: 'id'
-        });
+        .update({
+          full_name: profile.full_name,
+          phone_number: profile.phone_number,
+          address: profile.address
+        })
+        .eq('id', session.user.id);
 
-      if (profileError) throw profileError;
+      if (updateError) throw updateError;
 
-      // Refresh user data to get the updated metadata
-      await loadProfile();
-      
-      setIsEditing(false);
-      setMessage({ type: 'success', text: 'Profile updated successfully!' });
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 3000);
     } catch (error) {
       console.error('Error updating profile:', error);
-      setMessage({ type: 'error', text: 'Failed to update profile. Please try again.' });
-      // Revert to the previous name if there's an error
-      setFormData(prev => ({
-        ...prev,
-        fullName: user.user_metadata?.full_name || ''
-      }));
+      setError(error.message);
+    } finally {
+      setSaving(false);
     }
+  };
+
+  const handleRestaurantDashboard = () => {
+    if (!profile.restaurant_id) {
+      setError("You are not a restaurant owner. Please contact support if you'd like to register as a restaurant owner.");
+      setTimeout(() => setError(null), 5000);
+      return;
+    }
+    router.push('/restaurant/dashboard');
   };
 
   if (loading) {
     return (
-      <DashboardLayout>
-        <div className="text-center">Loading...</div>
-      </DashboardLayout>
-    );
-  }
-
-  return (
-    <DashboardLayout>
-      <div className="max-w-2xl mx-auto">
-        <div className="bg-gradient-to-r from-blue-200 to-yellow-100 h-32 rounded-t-lg"></div>
-        
-        <div className="bg-white rounded-b-lg shadow-md p-6 relative">
-          {message.text && (
-            <div className={`mb-4 p-4 rounded-lg ${
-              message.type === 'error' ? 'bg-red-50 text-red-700 border-l-4 border-red-500' :
-              message.type === 'success' ? 'bg-green-50 text-green-700 border-l-4 border-green-500' : ''
-            }`}>
-              {message.text}
-            </div>
-          )}
-          
-          {/* Profile Information Section */}
-          <div className="space-y-6">
-            <div className="flex justify-between items-center mb-8">
-              <div>
-                <h1 className="text-2xl font-bold mb-2 flex items-center space-x-2">
-                  <svg className="w-6 h-6 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                  <span>{formData.fullName || 'Welcome'}</span>
-                </h1>
-                <p className="text-gray-500">
-                  Registered on: {new Date(user.created_at).toLocaleDateString('en-US', { 
-                    day: '2-digit', 
-                    month: 'long', 
-                    year: 'numeric' 
-                  })}
-                </p>
-              </div>
-              <button
-                onClick={() => isEditing ? handleSubmit() : setIsEditing(true)}
-                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
-              >
-                {isEditing ? 'Save' : 'Edit'}
-              </button>
-            </div>
-
-            {/* Form Fields */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-              <input
-                type="text"
-                name="fullName"
-                value={formData.fullName}
-                onChange={handleInputChange}
-                disabled={!isEditing}
-                className="w-full p-3 border rounded-md bg-white text-gray-900 border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-700"
-                placeholder="Your Full Name"
-              />
-            </div>
-
-            {/* Email Section */}
-            <div>
-              <h2 className="text-sm font-medium text-gray-700 mb-1">Email Address</h2>
-              <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-md">
-                <div className="bg-blue-100 p-2 rounded">
-                  <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                  </svg>
-                </div>
-                <div>
-                  <p className="text-gray-900">{user.email}</p>
-                  <p className="text-sm text-gray-500">Primary email</p>
-                </div>
-              </div>
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
+            <div className="space-y-4">
+              <div className="h-10 bg-gray-200 rounded"></div>
+              <div className="h-10 bg-gray-200 rounded"></div>
+              <div className="h-32 bg-gray-200 rounded"></div>
             </div>
           </div>
         </div>
       </div>
-    </DashboardLayout>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Header />
+      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div className="bg-white shadow rounded-lg p-6">
+          <h1 className="text-2xl font-bold text-gray-900 mb-6">Profile Settings</h1>
+          
+          {error && (
+            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
+              <p className="text-sm text-red-600">{error}</p>
+            </div>
+          )}
+          
+          {success && (
+            <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-md">
+              <p className="text-sm text-green-600">Profile updated successfully!</p>
+            </div>
+          )}
+
+          <div className="mb-8 flex space-x-4">
+            <button
+              onClick={handleRestaurantDashboard}
+              className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            >
+              Restaurant Dashboard
+            </button>
+            <button
+              onClick={() => router.push('/orders')}
+              className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+            >
+              View My Orders
+            </button>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label htmlFor="full_name" className="block text-sm font-medium text-gray-700">
+                Full Name
+              </label>
+              <input
+                type="text"
+                id="full_name"
+                value={profile.full_name || ''}
+                onChange={(e) => setProfile({ ...profile, full_name: e.target.value })}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                required
+              />
+            </div>
+
+            <div>
+              <label htmlFor="phone_number" className="block text-sm font-medium text-gray-700">
+                Phone Number
+              </label>
+              <input
+                type="tel"
+                id="phone_number"
+                value={profile.phone_number || ''}
+                onChange={(e) => setProfile({ ...profile, phone_number: e.target.value })}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                required
+              />
+            </div>
+
+            <div>
+              <label htmlFor="address" className="block text-sm font-medium text-gray-700">
+                Delivery Address
+              </label>
+              <textarea
+                id="address"
+                value={profile.address || ''}
+                onChange={(e) => setProfile({ ...profile, address: e.target.value })}
+                rows={3}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                required
+              />
+            </div>
+
+            <div className="flex justify-end">
+              <button
+                type="submit"
+                disabled={saving}
+                className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+              >
+                {saving ? 'Saving...' : 'Save Changes'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
   );
 }

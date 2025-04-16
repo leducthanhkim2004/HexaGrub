@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { restaurantService } from '../../services/restaurantService';
 import { menuService } from '../../services/menuService';
-import { supabase } from '../../../utils/supabase/client';
+import { supabase } from '../../lib/supabase';
 import Header from '../../components/Header';
 
 export default function RestaurantMenuPage() {
@@ -16,14 +16,16 @@ export default function RestaurantMenuPage() {
   const [editingItem, setEditingItem] = useState(null);
   const router = useRouter();
 
-  const [formData, setFormData] = useState({
+  const initialFormState = {
     name: '',
     description: '',
     price: '',
     category: '',
-    image_url: '',
+    image_urls: [],
     is_available: true
-  });
+  };
+
+  const [formData, setFormData] = useState(initialFormState);
 
   useEffect(() => {
     fetchRestaurantData();
@@ -56,7 +58,7 @@ export default function RestaurantMenuPage() {
       
       // Get menu items
       const menuData = await menuService.getMenuItemsByRestaurant(restaurantData.id);
-      setMenuItems(menuData);
+      setMenuItems(menuData || []);
     } catch (error) {
       console.error('Error fetching restaurant data:', error);
       setError(error.message);
@@ -80,9 +82,13 @@ export default function RestaurantMenuPage() {
 
     try {
       const itemData = {
-        ...formData,
-        restaurant_id: restaurant.id,
-        price: parseFloat(formData.price)
+        name: formData.name,
+        description: formData.description,
+        price: parseFloat(formData.price) || 0,
+        category: formData.category,
+        image_urls: formData.image_urls,
+        is_available: formData.is_available,
+        restaurant_id: restaurant.id
       };
 
       if (editingItem) {
@@ -93,17 +99,10 @@ export default function RestaurantMenuPage() {
 
       // Refresh menu items
       const updatedMenu = await menuService.getMenuItemsByRestaurant(restaurant.id);
-      setMenuItems(updatedMenu);
+      setMenuItems(updatedMenu || []);
       
       // Reset form
-      setFormData({
-        name: '',
-        description: '',
-        price: '',
-        category: '',
-        image_url: '',
-        is_available: true
-      });
+      setFormData(initialFormState);
       setIsEditing(false);
       setEditingItem(null);
     } catch (error) {
@@ -117,12 +116,12 @@ export default function RestaurantMenuPage() {
   const handleEdit = (item) => {
     setEditingItem(item);
     setFormData({
-      name: item.name,
-      description: item.description,
-      price: item.price.toString(),
-      category: item.category,
-      image_url: item.image_url,
-      is_available: item.is_available
+      name: item.name || '',
+      description: item.description || '',
+      price: (item.price || 0).toString(),
+      category: item.category || '',
+      image_urls: item.image_urls || [],
+      is_available: Boolean(item.is_available)
     });
     setIsEditing(true);
   };
@@ -133,7 +132,7 @@ export default function RestaurantMenuPage() {
     try {
       await menuService.deleteMenuItem(itemId);
       const updatedMenu = await menuService.getMenuItemsByRestaurant(restaurant.id);
-      setMenuItems(updatedMenu);
+      setMenuItems(updatedMenu || []);
     } catch (error) {
       console.error('Error deleting menu item:', error);
       setError(error.message);
@@ -141,14 +140,7 @@ export default function RestaurantMenuPage() {
   };
 
   const handleCancel = () => {
-    setFormData({
-      name: '',
-      description: '',
-      price: '',
-      category: '',
-      image_url: '',
-      is_available: true
-    });
+    setFormData(initialFormState);
     setIsEditing(false);
     setEditingItem(null);
   };
@@ -267,9 +259,15 @@ export default function RestaurantMenuPage() {
                       </label>
                       <input
                         type="url"
-                        name="image_url"
-                        value={formData.image_url}
-                        onChange={handleChange}
+                        name="image_urls"
+                        value={formData.image_urls[0] || ''}
+                        onChange={(e) => {
+                          const url = e.target.value;
+                          setFormData(prev => ({
+                            ...prev,
+                            image_urls: url ? [url] : []
+                          }));
+                        }}
                         className="w-full px-3 py-2 border border-gray-400 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white placeholder:text-gray-500"
                         placeholder="https://example.com/image.jpg"
                       />
@@ -326,9 +324,9 @@ export default function RestaurantMenuPage() {
                         key={item.id}
                         className="border rounded-lg p-4 hover:shadow-md transition-shadow"
                       >
-                        {item.image_url && (
+                        {item.image_urls?.[0] && (
                           <img
-                            src={item.image_url}
+                            src={item.image_urls[0]}
                             alt={item.name}
                             className="w-full h-48 object-cover rounded-md mb-4"
                           />

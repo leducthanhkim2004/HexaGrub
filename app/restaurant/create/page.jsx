@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { restaurantService } from '../../services/restaurantService';
 import Header from '../../components/Header';
@@ -10,10 +10,10 @@ import 'react-image-crop/dist/ReactCrop.css';
 import { supabase } from '../../../utils/supabase/client';
 
 export default function CreateRestaurantPage() {
-  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
-  const router = useRouter();
 
   // Image upload states
   const [logoFile, setLogoFile] = useState(null);
@@ -36,31 +36,58 @@ export default function CreateRestaurantPage() {
     logo_url: '',
     cover_image_url: '',
     opening_hours: {
-      monday: '9:00 AM - 10:00 PM',
-      tuesday: '9:00 AM - 10:00 PM',
-      wednesday: '9:00 AM - 10:00 PM',
-      thursday: '9:00 AM - 10:00 PM',
-      friday: '9:00 AM - 10:00 PM',
-      saturday: '10:00 AM - 10:00 PM',
-      sunday: '10:00 AM - 9:00 PM'
+      monday: { open: '09:00', close: '22:00' },
+      tuesday: { open: '09:00', close: '22:00' },
+      wednesday: { open: '09:00', close: '22:00' },
+      thursday: { open: '09:00', close: '22:00' },
+      friday: { open: '09:00', close: '22:00' },
+      saturday: { open: '09:00', close: '22:00' },
+      sunday: { open: '09:00', close: '22:00' }
     }
   });
+
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
+  const checkAuth = async () => {
+    try {
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      
+      if (authError || !user) {
+        router.push('/login');
+        return;
+      }
+
+      // Check if user already has a restaurant
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('restaurant_id')
+        .eq('id', user.id)
+        .single();
+
+      if (profileError) {
+        throw profileError;
+      }
+
+      if (profile?.restaurant_id) {
+        router.push('/restaurant/dashboard');
+        return;
+      }
+
+      setLoading(false);
+    } catch (error) {
+      console.error('Error checking auth:', error);
+      setError('Failed to verify authentication');
+      setLoading(false);
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
       [name]: value
-    }));
-  };
-
-  const handleOpeningHoursChange = (day, value) => {
-    setFormData(prev => ({
-      ...prev,
-      opening_hours: {
-        ...prev.opening_hours,
-        [day]: value
-      }
     }));
   };
 
@@ -168,13 +195,39 @@ export default function CreateRestaurantPage() {
     } catch (error) {
       console.error('Error creating restaurant:', error);
       setError(error.message);
-    } finally {
       setLoading(false);
     }
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-600">{error}</p>
+          <button
+            onClick={() => router.push('/login')}
+            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            Go to Login
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white py-12 px-4 sm:px-6 lg:px-8">
       <Header />
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-3xl mx-auto">
@@ -394,8 +447,8 @@ export default function CreateRestaurantPage() {
                   </label>
                   <input
                     type="text"
-                    value={hours}
-                    onChange={(e) => handleOpeningHoursChange(day, e.target.value)}
+                    value={hours.open + ' - ' + hours.close}
+                    onChange={(e) => handleChange({ target: { name: day, value: e.target.value } })}
                     className="w-full px-3 py-2 border border-gray-400 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white placeholder-gray-500"
                     placeholder="9:00 AM - 10:00 PM"
                   />

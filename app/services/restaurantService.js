@@ -8,7 +8,19 @@ export const restaurantService = {
       throw new Error('You must be logged in to create a restaurant');
     }
 
-    const { data: restaurant, error } = await supabase
+    // First, update the user's profile to set their role as restaurant_owner
+    const { error: profileUpdateError } = await supabase
+      .from('profiles')
+      .update({ role: 'restaurant_owner' })
+      .eq('id', user.id);
+
+    if (profileUpdateError) {
+      console.error('Error updating user profile:', profileUpdateError);
+      throw new Error('Failed to update user profile');
+    }
+
+    // Then create the restaurant
+    const { data: restaurant, error: restaurantError } = await supabase
       .from('restaurants')
       .insert([{
         ...restaurantData,
@@ -17,19 +29,20 @@ export const restaurantService = {
       .select()
       .single();
 
-    if (error) {
-      console.error('Error creating restaurant:', error);
+    if (restaurantError) {
+      console.error('Error creating restaurant:', restaurantError);
       throw new Error('Failed to create restaurant');
     }
 
-    // Update the user's profile with restaurant_id
+    // Finally, update the profile with the restaurant_id
     const { error: profileError } = await supabase
       .from('profiles')
       .update({ restaurant_id: restaurant.id })
       .eq('id', user.id);
 
     if (profileError) {
-      console.error('Error updating profile:', profileError);
+      console.error('Error updating profile with restaurant_id:', profileError);
+      // Don't throw here, as the restaurant was created successfully
     }
 
     return restaurant;

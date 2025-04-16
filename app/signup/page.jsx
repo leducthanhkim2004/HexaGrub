@@ -3,24 +3,22 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { supabase } from '../../utils/supabase/client';
+import { supabase } from '../lib/supabase';
 
 export default function Signup() {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [role, setRole] = useState('customer'); // Default role is customer
+  const [role, setRole] = useState('customer');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
   const router = useRouter();
 
   const handleSignUp = async (e) => {
     e.preventDefault();
     setError('');
     
-    // Validate that passwords match
     if (password !== confirmPassword) {
       setError('Passwords do not match');
       return;
@@ -29,21 +27,24 @@ export default function Signup() {
     setLoading(true);
 
     try {
-      // Sign up the user with Supabase Auth, including full_name and role in metadata
+      // Sign up the user
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
-            full_name: fullName,
-            role: role // Store role in user metadata
+            full_name: fullName
           }
         }
       });
 
       if (authError) throw authError;
 
-      // Create a profile record in the profiles table
+      if (!authData.user) {
+        throw new Error('Failed to create user');
+      }
+
+      // Create a profile record
       const { error: profileError } = await supabase
         .from('profiles')
         .insert([
@@ -55,22 +56,19 @@ export default function Signup() {
           }
         ]);
 
-      if (profileError) throw profileError;
+      if (profileError) {
+        console.error('Error creating profile:', profileError);
+        throw new Error('Failed to create user profile');
+      }
 
-      setSuccess(true);
-      
-      // If the user is a restaurant owner, redirect them to the restaurant creation page
+      // If they're a restaurant owner, redirect them to create restaurant page
       if (role === 'restaurant_owner') {
-        setTimeout(() => {
-          router.push('/restaurant/create');
-        }, 2000);
+        router.push('/restaurant/create');
       } else {
-        // For customers, redirect to login page with success message
-        setTimeout(() => {
-          router.push('/login?message=Please check your email to confirm your account');
-        }, 2000);
+        router.push('/login');
       }
     } catch (error) {
+      console.error('Error in signup:', error);
       setError(error.message);
     } finally {
       setLoading(false);
@@ -78,32 +76,24 @@ export default function Signup() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 border-gray-300 rounded-md p-4">
+        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
           Create your account
         </h2>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+          {error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
+              {error}
+            </div>
+          )}
+
           <form className="space-y-6" onSubmit={handleSignUp}>
-            {error && (
-              <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-4">
-                <p className="text-red-700">{error}</p>
-              </div>
-            )}
-
-            {success && (
-              <div className="bg-green-50 border-l-4 border-green-400 p-4 mb-4">
-                <p className="text-green-700">
-                  Account created successfully! {role === 'restaurant_owner' ? 'Redirecting to restaurant registration...' : 'Please check your email to confirm your account.'}
-                </p>
-              </div>
-            )}
-
             <div>
-              <label htmlFor="fullName" className="block text-sm font-medium text-gray-800">
+              <label htmlFor="fullName" className="block text-sm font-medium text-gray-700">
                 Full Name
               </label>
               <div className="mt-1">
@@ -111,17 +101,16 @@ export default function Signup() {
                   id="fullName"
                   name="fullName"
                   type="text"
-                  placeholder="Enter your full name"
                   required
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-400 rounded-md shadow-sm placeholder-gray-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
+                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-800">
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                 Email address
               </label>
               <div className="mt-1">
@@ -130,17 +119,16 @@ export default function Signup() {
                   name="email"
                   type="email"
                   autoComplete="email"
-                  placeholder="Enter your email address"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-400 rounded-md shadow-sm placeholder-gray-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
+                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-800">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                 Password
               </label>
               <div className="mt-1">
@@ -148,18 +136,16 @@ export default function Signup() {
                   id="password"
                   name="password"
                   type="password"
-                  autoComplete="new-password"
-                  placeholder="Create a password"
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-400 rounded-md shadow-sm placeholder-gray-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
+                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-800">
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
                 Confirm Password
               </label>
               <div className="mt-1">
@@ -167,18 +153,16 @@ export default function Signup() {
                   id="confirmPassword"
                   name="confirmPassword"
                   type="password"
-                  autoComplete="new-password"
-                  placeholder="Confirm your password"
                   required
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-400 rounded-md shadow-sm placeholder-gray-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
+                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="role" className="block text-sm font-medium text-gray-800">
+              <label htmlFor="role" className="block text-sm font-medium text-gray-700">
                 Account Type
               </label>
               <div className="mt-1">
@@ -187,7 +171,7 @@ export default function Signup() {
                   name="role"
                   value={role}
                   onChange={(e) => setRole(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-400 rounded-md shadow-sm placeholder-gray-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
+                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 >
                   <option value="customer">Customer</option>
                   <option value="restaurant_owner">Restaurant Owner</option>
@@ -212,16 +196,16 @@ export default function Signup() {
                 <div className="w-full border-t border-gray-300" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-700 font-medium">
+                <span className="px-2 bg-white text-gray-500">
                   Already have an account?
                 </span>
               </div>
             </div>
 
-            <div className="mt-6">
+            <div className="mt-6 text-center">
               <Link
                 href="/login"
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-blue-600 bg-gray-200  focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="font-medium text-blue-600 hover:text-blue-500"
               >
                 Sign in
               </Link>

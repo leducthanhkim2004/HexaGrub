@@ -244,12 +244,13 @@ export default function RestaurantPage({ params }) {
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {categories.map((category) => (
                   <div
-                    key={category.id}
+                    key={category}
                     className="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
-                    onClick={() => setSelectedCategory(category.id)}
+                    onClick={() => setSelectedCategory(category)}
                   >
-                    <h4 className="font-medium text-gray-900">{category.name}</h4>
-                    <p className="text-sm text-gray-600">{category.description}</p>
+                    <h4 className="font-medium text-gray-900">
+                      {category.charAt(0).toUpperCase() + category.slice(1)}
+                    </h4>
                   </div>
                 ))}
               </div>

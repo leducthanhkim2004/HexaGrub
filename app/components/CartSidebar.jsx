@@ -100,9 +100,6 @@ export default function CartSidebar({ isOpen, onClose }) {
                           +
                         </button>
                       </div>
-                      <span className="font-semibold text-black">
-                        ${(item.price * item.quantity).toFixed(2)}
-                      </span>
                     </div>
                   </div>
                 ))
@@ -112,12 +109,17 @@ export default function CartSidebar({ isOpen, onClose }) {
             {cart.length > 0 && (
               <div className="border-t border-gray-200 pt-4 mt-4">
                 <div className="flex justify-between items-center mb-4">
-                  <span className="font-bold text-black">Total:</span>
-                  <span className="font-bold text-black">
+                  <span className="font-bold text-lg text-black">Total:</span>
+                  <span className="font-bold text-lg text-black">
                     ${getCartTotal().toFixed(2)}
                   </span>
                 </div>
-                <CheckoutForm onClose={onClose} />
+                <button
+                  onClick={handleCheckout}
+                  className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors"
+                >
+                  Proceed to Checkout
+                </button>
               </div>
             )}
           </>

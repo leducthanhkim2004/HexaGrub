@@ -2,8 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '../../../utils/supabase/client';
-import { restaurantService } from '../../services/restaurantService';
+import { supabase } from '../../lib/supabase';
 import Header from '../../components/Header';
 
 export default function RestaurantDashboard() {
@@ -14,38 +13,100 @@ export default function RestaurantDashboard() {
   const router = useRouter();
 
   useEffect(() => {
-    checkRestaurantOwner();
-  }, []);
+    let mounted = true;
+    let authListener;
 
-  const checkRestaurantOwner = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
+    const checkRestaurantOwner = async () => {
+      try {
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          console.error('Session error:', sessionError);
+          throw sessionError;
+        }
+
+        if (!session) {
+          console.log('No session found, redirecting to login');
+          router.push('/login');
+          return;
+        }
+
+        // Get profile data
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('role, restaurant_id')
+          .eq('id', session.user.id)
+          .single();
+
+        if (profileError) {
+          console.error('Profile error:', profileError);
+          throw new Error('Could not fetch profile data');
+        }
+
+        if (!profile || profile.role !== 'restaurant_owner') {
+          console.log('Not a restaurant owner');
+          router.push('/');
+          return;
+        }
+
+        if (!profile.restaurant_id) {
+          console.log('No restaurant ID found');
+          router.push('/restaurant/create');
+          return;
+        }
+
+        // Get restaurant data
+        const { data: restaurantData, error: restaurantError } = await supabase
+          .from('restaurants')
+          .select('*')
+          .eq('id', profile.restaurant_id)
+          .single();
+
+        if (restaurantError) {
+          console.error('Restaurant error:', restaurantError);
+          throw new Error('Could not fetch restaurant data');
+        }
+
+        if (!restaurantData) {
+          throw new Error('Restaurant not found');
+        }
+
+        if (mounted) {
+          setRestaurant(restaurantData);
+          setIsOwner(true);
+          setLoading(false);
+          setError(null);
+        }
+      } catch (error) {
+        console.error('Dashboard error:', error);
+        if (mounted) {
+          setError(error.message);
+          setLoading(false);
+          setRestaurant(null);
+          setIsOwner(false);
+        }
+      }
+    };
+
+    // Set up auth listener
+    authListener = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT') {
         router.push('/login');
-        return;
+      } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        checkRestaurantOwner();
       }
+    });
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role, restaurant_id')
-        .eq('id', user.id)
-        .single();
+    // Initial check
+    checkRestaurantOwner();
 
-      if (!profile?.restaurant_id) {
-        router.push('/restaurant/create');
-        return;
+    return () => {
+      mounted = false;
+      if (authListener) {
+        authListener.data.subscription.unsubscribe();
       }
-
-      const restaurantData = await restaurantService.getRestaurantById(profile.restaurant_id);
-      setRestaurant(restaurantData);
-      setIsOwner(true);
-    } catch (error) {
-      console.error('Error checking restaurant owner status:', error);
-      setError(error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+  }, [router]);
 
   if (loading) {
     return (
@@ -62,15 +123,32 @@ export default function RestaurantDashboard() {
     return (
       <div className="min-h-screen bg-white">
         <Header />
-        <div className="flex items-center justify-center min-h-[calc(100vh-64px)]">
-          <div className="text-red-600">{error}</div>
+        <div className="flex flex-col items-center justify-center min-h-[calc(100vh-64px)]">
+          <div className="text-red-600 mb-4">{error}</div>
+          <button
+            onClick={() => {
+              setLoading(true);
+              setError(null);
+              router.refresh();
+            }}
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          >
+            Try Again
+          </button>
         </div>
       </div>
     );
   }
 
-  if (!isOwner) {
-    return null;
+  if (!isOwner || !restaurant) {
+    return (
+      <div className="min-h-screen bg-white">
+        <Header />
+        <div className="flex items-center justify-center min-h-[calc(100vh-64px)]">
+          <div className="text-red-600">Not authorized to view this page</div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -147,28 +225,28 @@ export default function RestaurantDashboard() {
           </div>
 
           {/* Quick Actions */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <button
+              onClick={() => router.push('/restaurant/orders')}
+              className="bg-blue-600 text-white p-6 rounded-lg shadow-md hover:bg-blue-700 transition-colors"
+            >
+              <h3 className="text-xl font-semibold mb-2">Manage Orders</h3>
+              <p className="text-blue-100">View and manage customer orders</p>
+            </button>
+            <button
               onClick={() => router.push('/restaurant/menu')}
               className="bg-white shadow-md rounded-lg p-6 cursor-pointer hover:shadow-lg transition-shadow border border-gray-200"
             >
               <h3 className="text-lg font-semibold text-black mb-2">Manage Menu</h3>
               <p className="text-gray-600">Add, edit, or remove menu items</p>
-            </div>
-            <div
-              onClick={() => router.push('/restaurant/orders')}
-              className="bg-white shadow-md rounded-lg p-6 cursor-pointer hover:shadow-lg transition-shadow border border-gray-200"
-            >
-              <h3 className="text-lg font-semibold text-black mb-2">Manage Orders</h3>
-              <p className="text-gray-600">View and manage incoming orders</p>
-            </div>
-            <div
+            </button>
+            <button
               onClick={() => router.push('/restaurant/settings')}
               className="bg-white shadow-md rounded-lg p-6 cursor-pointer hover:shadow-lg transition-shadow border border-gray-200"
             >
               <h3 className="text-lg font-semibold text-black mb-2">Settings</h3>
               <p className="text-gray-600">Configure restaurant settings</p>
-            </div>
+            </button>
           </div>
         </div>
       </main>
