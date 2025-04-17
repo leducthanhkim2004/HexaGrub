@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '../lib/supabase';
 import Header from '../components/Header';
@@ -8,20 +8,62 @@ import { useAuth } from '../context/AuthContext';
 
 export default function ProfilePage() {
   const router = useRouter();
-  const { user, profile: authProfile, loading: authLoading, error: authError, setProfile: setAuthProfile, refreshProfile } = useAuth();
+  const { user, profile: authProfile, loading: authLoading, error: authError, refreshProfile } = useAuth();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
   const [formData, setFormData] = useState({
-    full_name: authProfile?.full_name || '',
-    phone_number: authProfile?.phone_number || '',
-    address: authProfile?.address || '',
+    full_name: '',
+    phone_number: '',
+    address: '',
   });
 
-  // Redirect if not authenticated
-  if (!authLoading && !user) {
-    router.push('/login');
-    return null;
+  // Update form data when profile loads
+  useEffect(() => {
+    if (authProfile) {
+      setFormData({
+        full_name: authProfile.full_name || '',
+        phone_number: authProfile.phone_number || '',
+        address: authProfile.address || '',
+      });
+    }
+  }, [authProfile]);
+
+  // Handle success message cleanup
+  useEffect(() => {
+    let timeoutId;
+    if (success) {
+      timeoutId = setTimeout(() => setSuccess(false), 3000);
+    }
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [success]);
+
+  // Handle authentication redirect
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push('/login');
+    }
+  }, [authLoading, user, router]);
+
+  // Don't render anything while checking auth
+  if (authLoading || (!authLoading && !user)) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
+            <div className="space-y-4">
+              <div className="h-10 bg-gray-200 rounded"></div>
+              <div className="h-10 bg-gray-200 rounded"></div>
+              <div className="h-32 bg-gray-200 rounded"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   const handleSubmit = async (e) => {
@@ -45,7 +87,6 @@ export default function ProfilePage() {
       // Refresh the profile in context
       await refreshProfile();
       setSuccess(true);
-      setTimeout(() => setSuccess(false), 3000);
     } catch (error) {
       console.error('Error updating profile:', error);
       setError(error.message);
@@ -53,24 +94,6 @@ export default function ProfilePage() {
       setSaving(false);
     }
   };
-
-  if (authLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <Header />
-        <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-          <div className="animate-pulse">
-            <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
-            <div className="space-y-4">
-              <div className="h-10 bg-gray-200 rounded"></div>
-              <div className="h-10 bg-gray-200 rounded"></div>
-              <div className="h-32 bg-gray-200 rounded"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -91,13 +114,22 @@ export default function ProfilePage() {
             </div>
           )}
 
-          <div className="mb-8 flex space-x-4">
+          <div className="mb-8 flex flex-wrap gap-4">
             <button
               onClick={() => router.push('/orders')}
               className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
             >
               View My Orders
             </button>
+            
+            {authProfile?.role === 'restaurant_owner' && (
+              <button
+                onClick={() => router.push('/restaurant/dashboard')}
+                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              >
+                Restaurant Dashboard
+              </button>
+            )}
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">

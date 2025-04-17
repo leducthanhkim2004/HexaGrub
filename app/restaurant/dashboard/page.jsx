@@ -12,10 +12,14 @@ export default function RestaurantDashboard() {
   const [error, setError] = useState(null);
   const [isOwner, setIsOwner] = useState(false);
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, loading: authLoading, isAuthenticated } = useAuth();
 
   useEffect(() => {
-    if (!user) {
+    // Don't do anything while auth is loading
+    if (authLoading) return;
+
+    // If not authenticated after auth loading completes, redirect to login
+    if (!isAuthenticated) {
       router.push('/login');
       return;
     }
@@ -56,9 +60,22 @@ export default function RestaurantDashboard() {
     };
 
     fetchRestaurantData();
-  }, [user, router]);
+  }, [user, router, authLoading, isAuthenticated]);
 
-  if (loading) {
+  // Show loading state while auth is being checked
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-white">
+        <Header />
+        <div className="flex items-center justify-center min-h-[calc(100vh-64px)]">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show loading state while fetching restaurant data
+  if (loading && !error) {
     return (
       <div className="min-h-screen bg-white">
         <Header />

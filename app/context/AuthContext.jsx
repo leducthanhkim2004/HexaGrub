@@ -31,13 +31,18 @@ export function AuthProvider({ children }) {
     let mounted = true;
     let authListener = null;
 
-    const initializeAuth = async () => {
+    async function initializeAuth() {
       try {
+        // Get initial session
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
         if (sessionError) {
           console.error('Session error:', sessionError);
-          throw sessionError;
+          if (mounted) {
+            setError(sessionError.message);
+            setLoading(false);
+          }
+          return;
         }
 
         if (mounted) {
@@ -48,18 +53,16 @@ export function AuthProvider({ children }) {
             setUser(null);
             setProfile(null);
           }
+          setLoading(false);
         }
       } catch (error) {
         console.error('Auth initialization error:', error);
         if (mounted) {
           setError(error.message);
-        }
-      } finally {
-        if (mounted) {
           setLoading(false);
         }
       }
-    };
+    }
 
     // Initialize auth
     initializeAuth();
@@ -68,15 +71,20 @@ export function AuthProvider({ children }) {
     authListener = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return;
 
-      if (session?.user) {
-        setUser(session.user);
-        await fetchProfile(session.user.id);
-      } else {
-        setUser(null);
-        setProfile(null);
+      try {
+        if (session?.user) {
+          setUser(session.user);
+          await fetchProfile(session.user.id);
+        } else {
+          setUser(null);
+          setProfile(null);
+        }
+      } catch (error) {
+        console.error('Auth state change error:', error);
+        setError(error.message);
+      } finally {
+        setLoading(false);
       }
-      
-      setLoading(false);
     });
 
     return () => {
@@ -94,7 +102,8 @@ export function AuthProvider({ children }) {
     error,
     setUser,
     setProfile,
-    refreshProfile: () => user && fetchProfile(user.id)
+    refreshProfile: () => user && fetchProfile(user.id),
+    isAuthenticated: !!user
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
