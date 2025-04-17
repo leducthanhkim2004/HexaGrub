@@ -90,7 +90,7 @@ export default function EditRestaurantPage() {
 
       if (error) throw error;
 
-      router.push('/restaurant/dashboard');
+      router.push('/restaurant-admin');
     } catch (error) {
       console.error('Error updating restaurant:', error);
       setError(error.message);

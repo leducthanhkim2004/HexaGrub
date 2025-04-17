@@ -173,13 +173,6 @@ export default function RestaurantDashboard() {
               <h3 className="text-lg font-semibold text-black mb-2">Manage Menu</h3>
               <p className="text-gray-600">Add, edit, or remove menu items</p>
             </button>
-            <button
-              onClick={() => router.push('/restaurant/settings')}
-              className="bg-white shadow-md rounded-lg p-6 cursor-pointer hover:shadow-lg transition-shadow border border-gray-200"
-            >
-              <h3 className="text-lg font-semibold text-black mb-2">Settings</h3>
-              <p className="text-gray-600">Configure restaurant settings</p>
-            </button>
           </div>
         </div>
       </main>

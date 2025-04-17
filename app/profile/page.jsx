@@ -54,15 +54,6 @@ export default function ProfilePage() {
     }
   };
 
-  const handleRestaurantDashboard = () => {
-    if (!authProfile?.restaurant_id) {
-      setError("You are not a restaurant owner. Please contact support if you'd like to register as a restaurant owner.");
-      setTimeout(() => setError(null), 5000);
-      return;
-    }
-    router.push('/restaurant/dashboard');
-  };
-
   if (authLoading) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -102,12 +93,6 @@ export default function ProfilePage() {
 
           <div className="mb-8 flex space-x-4">
             <button
-              onClick={handleRestaurantDashboard}
-              className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-            >
-              Restaurant Dashboard
-            </button>
-            <button
               onClick={() => router.push('/orders')}
               className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
             >
@@ -125,7 +110,7 @@ export default function ProfilePage() {
                 id="full_name"
                 value={formData.full_name}
                 onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                className="mt-1 block w-full px-4 py-3 text-lg font-medium text-gray-800 rounded-md border-2 border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 required
               />
             </div>
@@ -139,7 +124,7 @@ export default function ProfilePage() {
                 id="phone_number"
                 value={formData.phone_number}
                 onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                className="mt-1 block w-full px-4 py-3 text-lg font-medium text-gray-800 rounded-md border-2 border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 required
               />
             </div>
@@ -153,7 +138,7 @@ export default function ProfilePage() {
                 value={formData.address}
                 onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                 rows={3}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                className="mt-1 block w-full px-4 py-3 text-lg font-medium text-gray-800 rounded-md border-2 border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 required
               />
             </div>

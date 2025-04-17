@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useForm } from 'react-hook-form';
 import Image from 'next/image';
 import { restaurantService } from '../../services/restaurantService';
 import { menuService } from '../../services/menuService';
@@ -19,53 +18,69 @@ export default function RestaurantMenuPage() {
   const [editingItem, setEditingItem] = useState(null);
   const [imagePreviews, setImagePreviews] = useState([]);
   const [uploadedFiles, setUploadedFiles] = useState([]);
-  const [imageUrls, setImageUrls] = useState([]);
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    price: '',
+    category: '',
+    image_urls: [],
+    new_image_url: '',
+    is_available: true
+  });
   const router = useRouter();
   const { user } = useAuth();
 
-  const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm({
-    defaultValues: {
-      name: '',
-      description: '',
-      price: '',
-      category: '',
-      image_urls: [],
-      new_image_url: '',
-      image_files: null,
-      is_available: true
-    }
-  });
+  // Handle form input changes
+  const handleInputChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+  };
 
-  // Watch the image inputs for preview
-  const watchImageUrl = watch('new_image_url');
-  const watchImageFiles = watch('image_files');
-  const watchImageUrls = watch('image_urls');
+  // Handle file selection
+  const handleFileChange = (e) => {
+    const files = Array.from(e.target.files);
+    setUploadedFiles(files);
+    
+    // Create previews for the files
+    const newPreviews = [];
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        newPreviews.push(reader.result);
+        if (newPreviews.length === files.length) {
+          setImagePreviews([...formData.image_urls, ...newPreviews]);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  };
 
-  // Update previews when URL or files change
-  useEffect(() => {
-    const newPreviews = [...(watchImageUrls || [])];
-    
-    // Add URL preview if there's a new URL
-    if (watchImageUrl) {
-      newPreviews.push(watchImageUrl);
-    }
-    
-    // Add file previews
-    if (watchImageFiles?.length) {
-      const fileArray = Array.from(watchImageFiles);
-      setUploadedFiles(fileArray);
-      
-      fileArray.forEach(file => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setImagePreviews(prev => [...prev, reader.result]);
-        };
-        reader.readAsDataURL(file);
+  // Handle adding a URL
+  const handleAddImageUrl = () => {
+    if (formData.new_image_url && !formData.image_urls.includes(formData.new_image_url)) {
+      const updatedUrls = [...formData.image_urls, formData.new_image_url];
+      setFormData({
+        ...formData,
+        image_urls: updatedUrls,
+        new_image_url: ''
       });
+      setImagePreviews(updatedUrls);
     }
-    
-    setImagePreviews(newPreviews);
-  }, [watchImageUrl, watchImageFiles, watchImageUrls]);
+  };
+
+  // Handle removing an image
+  const handleDeleteImage = (index) => {
+    const updatedUrls = [...formData.image_urls];
+    updatedUrls.splice(index, 1);
+    setFormData({
+      ...formData,
+      image_urls: updatedUrls
+    });
+    setImagePreviews(updatedUrls);
+  };
 
   useEffect(() => {
     if (!user) {
@@ -143,17 +158,13 @@ export default function RestaurantMenuPage() {
     return uploadedUrls;
   };
 
-  const onSubmit = async (formData) => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     setLoading(true);
     setError(null);
 
     try {
-      let allImageUrls = [...(formData.image_urls || [])];
-      
-      // Add new URL if provided
-      if (formData.new_image_url) {
-        allImageUrls.push(formData.new_image_url);
-      }
+      let allImageUrls = [...formData.image_urls];
       
       // Upload new files if provided
       if (uploadedFiles.length > 0) {
@@ -178,20 +189,6 @@ export default function RestaurantMenuPage() {
       };
 
       if (editingItem) {
-        // If updating and there are new images, delete the old ones
-        if ((uploadedFiles.length > 0 || formData.new_image_url) && editingItem.image_urls?.length) {
-          try {
-            const oldImagePaths = editingItem.image_urls.map(url => 
-              `menu-items/${url.split('/').pop()}`
-            );
-            await supabase.storage
-              .from('restaurant-images')
-              .remove(oldImagePaths);
-          } catch (deleteError) {
-            console.error('Error deleting old images:', deleteError);
-            // Continue with update even if delete fails
-          }
-        }
         await menuService.updateMenuItem(editingItem.id, itemData);
       } else {
         await menuService.addMenuItem(itemData);
@@ -201,11 +198,18 @@ export default function RestaurantMenuPage() {
       const updatedMenu = await menuService.getMenuItemsByRestaurant(restaurant.id);
       setMenuItems(updatedMenu || []);
       
-      // Reset form and previews
-      reset();
+      // Reset form
+      setFormData({
+        name: '',
+        description: '',
+        price: '',
+        category: '',
+        image_urls: [],
+        new_image_url: '',
+        is_available: true
+      });
       setImagePreviews([]);
       setUploadedFiles([]);
-      setImageUrls([]);
       setIsEditing(false);
       setEditingItem(null);
     } catch (error) {
@@ -218,85 +222,61 @@ export default function RestaurantMenuPage() {
 
   const handleEdit = (item) => {
     setEditingItem(item);
-    setImagePreviews(item.image_urls || []);
-    // Set form values
-    Object.entries(item).forEach(([key, value]) => {
-      if (key === 'price') {
-        setValue(key, value.toString());
-      } else if (key === 'image_urls') {
-        setValue(key, value || []);
-      } else {
-        setValue(key, value);
-      }
-    });
     setIsEditing(true);
-  };
-
-  const handleDeleteImage = (index) => {
-    const currentUrls = watch('image_urls') || [];
-    const newUrls = [...currentUrls];
-    newUrls.splice(index, 1);
-    setValue('image_urls', newUrls);
-    setImagePreviews(prev => {
-      const newPreviews = [...prev];
-      newPreviews.splice(index, 1);
-      return newPreviews;
+    setFormData({
+      name: item.name || '',
+      description: item.description || '',
+      price: item.price?.toString() || '',
+      category: item.category || '',
+      image_urls: item.image_urls || [],
+      new_image_url: '',
+      is_available: item.is_available !== false
     });
-  };
-
-  const handleAddImageUrl = () => {
-    const newUrl = watch('new_image_url');
-    if (newUrl) {
-      const currentUrls = watch('image_urls') || [];
-      setValue('image_urls', [...currentUrls, newUrl]);
-      setValue('new_image_url', '');
-    }
+    setImagePreviews(item.image_urls || []);
   };
 
   const handleDelete = async (itemId) => {
-    if (!confirm('Are you sure you want to delete this item?')) return;
-
+    if (!confirm('Are you sure you want to delete this menu item?')) {
+      return;
+    }
+    
+    setLoading(true);
     try {
       await menuService.deleteMenuItem(itemId);
-      const updatedMenu = await menuService.getMenuItemsByRestaurant(restaurant.id);
-      setMenuItems(updatedMenu || []);
+      setMenuItems(prevItems => prevItems.filter(item => item.id !== itemId));
     } catch (error) {
       console.error('Error deleting menu item:', error);
       setError(error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleCancel = () => {
-    reset();
-    setImagePreviews([]);
-    setUploadedFiles([]);
-    setImageUrls([]);
     setIsEditing(false);
     setEditingItem(null);
+    setFormData({
+      name: '',
+      description: '',
+      price: '',
+      category: '',
+      image_urls: [],
+      new_image_url: '',
+      is_available: true
+    });
+    setImagePreviews([]);
+    setUploadedFiles([]);
   };
 
-  if (loading) {
+  if (loading && !restaurant) {
     return (
       <div className="min-h-screen bg-gray-100">
         <Header />
-        <main className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-8">
           <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <div className="text-2xl text-gray-500">Loading restaurant data...</div>
           </div>
-        </main>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gray-100">
-        <Header />
-        <main className="container mx-auto px-4 py-8">
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-            {error}
-          </div>
-        </main>
+        </div>
       </div>
     );
   }
@@ -304,258 +284,237 @@ export default function RestaurantMenuPage() {
   return (
     <div className="min-h-screen bg-gray-100">
       <Header />
-      <main className="container mx-auto px-4 py-8">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex justify-between items-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">Manage Menu</h1>
-            <button
-              onClick={() => router.push('/restaurant/dashboard')}
-              className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700"
-            >
-              Back to Dashboard
-            </button>
+      <div className="container mx-auto px-4 py-8">
+        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-2xl font-bold text-gray-900">
+              {isEditing ? 'Edit Menu Item' : 'Add Menu Item'}
+            </h1>
+            {isEditing && (
+              <button
+                onClick={handleCancel}
+                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300"
+              >
+                Cancel
+              </button>
+            )}
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Menu Item Form */}
-            <div className="lg:col-span-1">
-              <div className="bg-white shadow-md rounded-lg p-6 border border-gray-200">
-                <h2 className="text-xl font-semibold mb-4">
-                  {isEditing ? 'Edit Menu Item' : 'Add New Menu Item'}
-                </h2>
-                
-                <form onSubmit={handleSubmit(onSubmit)} className="bg-gray-50 p-4 rounded-md">
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-800 mb-1">
-                        Name *
-                      </label>
-                      <input
-                        type="text"
-                        {...register('name', { required: 'Name is required' })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-                      />
-                      {errors.name && (
-                        <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
-                      )}
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-800 mb-1">
-                        Description
-                      </label>
-                      <textarea
-                        {...register('description')}
-                        rows="3"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-800 mb-1">
-                        Price *
-                      </label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        {...register('price', { 
-                          required: 'Price is required',
-                          min: { value: 0, message: 'Price must be greater than 0' }
-                        })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-                      />
-                      {errors.price && (
-                        <p className="mt-1 text-sm text-red-600">{errors.price.message}</p>
-                      )}
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-800 mb-1">
-                        Category *
-                      </label>
-                      <input
-                        type="text"
-                        {...register('category', { required: 'Category is required' })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-                      />
-                      {errors.category && (
-                        <p className="mt-1 text-sm text-red-600">{errors.category.message}</p>
-                      )}
-                    </div>
-
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-800 mb-1">
-                          Add Image URL
-                        </label>
-                        <div className="flex space-x-2">
-                          <input
-                            type="url"
-                            {...register('new_image_url')}
-                            placeholder="https://example.com/image.jpg"
-                            className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-                          />
-                          <button
-                            type="button"
-                            onClick={handleAddImageUrl}
-                            className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
-                          >
-                            Add
-                          </button>
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-800 mb-1">
-                          Upload Images
-                        </label>
-                        <input
-                          type="file"
-                          multiple
-                          accept="image/*"
-                          {...register('image_files')}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        />
-                        <p className="mt-1 text-sm text-gray-500">
-                          You can select multiple images (max 5MB each)
-                        </p>
-                      </div>
-
-                      {/* Image Previews */}
-                      {imagePreviews.length > 0 && (
-                        <div className="mt-4">
-                          <label className="block text-sm font-medium text-gray-800 mb-2">
-                            Images ({imagePreviews.length})
-                          </label>
-                          <div className="grid grid-cols-2 gap-4">
-                            {imagePreviews.map((preview, index) => (
-                              <div key={index} className="relative">
-                                <img
-                                  src={preview}
-                                  alt={`Preview ${index + 1}`}
-                                  className="w-full h-32 object-cover rounded-lg"
-                                />
-                                <button
-                                  type="button"
-                                  onClick={() => handleDeleteImage(index)}
-                                  className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600"
-                                >
-                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                                  </svg>
-                                </button>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="flex items-center">
-                      <input
-                        type="checkbox"
-                        {...register('is_available')}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                      />
-                      <label className="ml-2 block text-sm text-gray-900">
-                        Available for Order
-                      </label>
-                    </div>
-
-                    <div className="flex space-x-4">
-                      <button
-                        type="submit"
-                        disabled={loading}
-                        className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50"
-                      >
-                        {loading ? 'Saving...' : isEditing ? 'Update Item' : 'Add Item'}
-                      </button>
-                      {isEditing && (
-                        <button
-                          type="button"
-                          onClick={handleCancel}
-                          className="flex-1 bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
-                        >
-                          Cancel
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </form>
-              </div>
+          {error && (
+            <div className="bg-red-50 text-red-500 p-4 rounded-md mb-6">
+              {error}
             </div>
+          )}
 
-            {/* Menu Items List */}
-            <div className="lg:col-span-2">
-              <div className="bg-white shadow-md rounded-lg overflow-hidden">
-                <div className="divide-y divide-gray-200">
-                  {menuItems.map((item) => (
-                    <div key={item.id} className="p-6 flex items-start space-x-4">
-                      <div className="flex-shrink-0">
-                        {item.image_urls?.length > 0 ? (
-                          <div className="relative h-24 w-24">
-                            <img
-                              src={item.image_urls[0]}
-                              alt={item.name}
-                              className="h-24 w-24 object-cover rounded-md"
-                            />
-                            {item.image_urls.length > 1 && (
-                              <div className="absolute bottom-1 right-1 bg-black bg-opacity-50 text-white text-xs px-1.5 py-0.5 rounded-full">
-                                +{item.image_urls.length - 1}
-                              </div>
-                            )}
-                          </div>
-                        ) : (
-                          <div className="h-24 w-24 bg-gray-200 rounded-md flex items-center justify-center">
-                            <svg className="h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between">
-                          <h3 className="text-lg font-medium text-gray-900">{item.name}</h3>
-                          <p className="text-lg font-semibold text-gray-900">
-                            ${item.price.toFixed(2)}
-                          </p>
-                        </div>
-                        <p className="mt-1 text-sm text-gray-500">{item.description}</p>
-                        <div className="mt-2 flex items-center space-x-4">
-                          <span className="text-sm text-gray-500">Category: {item.category}</span>
-                          <span className={`text-sm ${item.is_available ? 'text-green-600' : 'text-red-600'}`}>
-                            {item.is_available ? 'Available' : 'Not Available'}
-                          </span>
-                        </div>
-                        <div className="mt-4 flex space-x-4">
-                          <button
-                            onClick={() => handleEdit(item)}
-                            className="text-blue-600 hover:text-blue-800"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleDelete(item.id)}
-                            className="text-red-600 hover:text-red-800"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                  {menuItems.length === 0 && (
-                    <div className="p-6 text-center text-gray-500">
-                      No menu items yet. Add your first item using the form.
-                    </div>
-                  )}
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-base font-medium text-gray-800 mb-2">
+                  Name *
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full px-4 py-3 text-lg font-medium text-gray-800 border-2 border-gray-400 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
+                />
+              </div>
+
+              <div>
+                <label className="block text-base font-medium text-gray-800 mb-2">
+                  Price *
+                </label>
+                <input
+                  type="number"
+                  name="price"
+                  value={formData.price}
+                  onChange={handleInputChange}
+                  step="0.01"
+                  min="0"
+                  required
+                  className="w-full px-4 py-3 text-lg font-medium text-gray-800 border-2 border-gray-400 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
+                />
+              </div>
+
+              <div>
+                <label className="block text-base font-medium text-gray-800 mb-2">
+                  Category *
+                </label>
+                <select
+                  name="category"
+                  value={formData.category}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full px-4 py-3 text-lg font-medium text-gray-800 border-2 border-gray-400 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
+                >
+                  <option value="">Select Category</option>
+                  <option value="appetizers">Appetizers</option>
+                  <option value="main-course">Main Course</option>
+                  <option value="desserts">Desserts</option>
+                  <option value="drinks">Drinks</option>
+                  <option value="sides">Sides</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-base font-medium text-gray-800 mb-2">
+                  Available
+                </label>
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    name="is_available"
+                    checked={formData.is_available}
+                    onChange={handleInputChange}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <span className="ml-2 text-base font-medium text-gray-800">Item is available for ordering</span>
                 </div>
               </div>
             </div>
-          </div>
+
+            <div>
+              <label className="block text-base font-medium text-gray-800 mb-2">
+                Description
+              </label>
+              <textarea
+                name="description"
+                value={formData.description}
+                onChange={handleInputChange}
+                rows={4}
+                className="w-full px-4 py-3 text-lg font-medium text-gray-800 border-2 border-gray-400 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
+              />
+            </div>
+
+            <div>
+              <label className="block text-base font-medium text-gray-800 mb-2">
+                Images
+              </label>
+              
+              {/* Image URL input */}
+              <div className="flex mb-3">
+                <input
+                  type="url"
+                  name="new_image_url"
+                  value={formData.new_image_url}
+                  onChange={handleInputChange}
+                  placeholder="Enter image URL"
+                  className="flex-grow px-4 py-3 text-lg font-medium text-gray-800 border-2 border-gray-400 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
+                />
+                <button
+                  type="button"
+                  onClick={handleAddImageUrl}
+                  className="px-4 py-3 bg-blue-600 text-white font-medium rounded-r-md hover:bg-blue-700"
+                >
+                  Add URL
+                </button>
+              </div>
+              
+              {/* File upload */}
+              <div className="mt-3">
+                <label className="block text-base font-medium text-gray-800 mb-2">
+                  Upload Images
+                </label>
+                <input
+                  type="file"
+                  onChange={handleFileChange}
+                  multiple
+                  accept="image/*"
+                  className="w-full px-4 py-3 text-base font-medium text-gray-800 border-2 border-gray-400 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
+                />
+              </div>
+              
+              {/* Image previews */}
+              {imagePreviews.length > 0 && (
+                <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {imagePreviews.map((url, index) => (
+                    <div key={index} className="relative">
+                      <div className="h-32 w-full relative border rounded-md overflow-hidden">
+                        <img
+                          src={url}
+                          alt={`Preview ${index + 1}`}
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteImage(index)}
+                        className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full hover:bg-red-600"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end">
+              <button
+                type="submit"
+                disabled={loading}
+                className={`px-6 py-3 bg-blue-600 text-white text-lg font-medium rounded-md hover:bg-blue-700 ${
+                  loading ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
+              >
+                {loading ? 'Saving...' : isEditing ? 'Update Item' : 'Add Item'}
+              </button>
+            </div>
+          </form>
         </div>
-      </main>
+
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Menu Items</h2>
+          
+          {menuItems.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              <p className="text-xl font-medium">No menu items yet. Add your first item above.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {menuItems.map((item) => (
+                <div key={item.id} className="border-2 border-gray-300 rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow">
+                  <div className="h-48 relative">
+                    <img
+                      src={item.image_urls?.[0] || '/placeholder-food.jpg'}
+                      alt={item.name}
+                      className="h-full w-full object-cover"
+                    />
+                    {!item.is_available && (
+                      <div className="absolute top-2 right-2 bg-red-500 text-white px-3 py-1 rounded text-sm font-bold">
+                        Unavailable
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-4">
+                    <div className="flex justify-between items-start">
+                      <h3 className="text-xl font-bold text-gray-900">{item.name}</h3>
+                      <span className="text-xl font-bold text-blue-700">${parseFloat(item.price).toFixed(2)}</span>
+                    </div>
+                    <p className="text-base text-gray-700 mt-2 line-clamp-2">{item.description}</p>
+                    <div className="mt-4 pt-4 border-t border-gray-300 flex justify-between">
+                      <button
+                        onClick={() => handleEdit(item)}
+                        className="px-4 py-2 text-blue-600 font-medium hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDelete(item.id)}
+                        className="px-4 py-2 text-red-600 font-medium hover:text-red-800 hover:bg-red-50 rounded-md transition-colors"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 } 

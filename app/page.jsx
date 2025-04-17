@@ -76,7 +76,7 @@ export default function Home() {
               placeholder="Search restaurants..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full px-6 py-4 text-lg border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-6 py-4 text-xl font-medium text-gray-800 border-2 border-gray-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm"
             />
             <svg
               className="absolute right-4 top-1/2 transform -translate-y-1/2 w-6 h-6 text-gray-400"

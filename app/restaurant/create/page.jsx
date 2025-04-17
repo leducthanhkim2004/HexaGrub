@@ -62,7 +62,7 @@ export default function CreateRestaurantPage() {
       }
 
       if (profile?.restaurant_id) {
-        router.push('/restaurant/dashboard');
+        router.push('/restaurant-admin');
         return;
       }
 
@@ -181,7 +181,7 @@ export default function CreateRestaurantPage() {
       setSuccess(true);
       
       setTimeout(() => {
-        router.push('/restaurant/dashboard');
+        router.push('/restaurant-admin');
       }, 2000);
     } catch (error) {
       console.error('Error creating restaurant:', error);
@@ -232,7 +232,7 @@ export default function CreateRestaurantPage() {
           
           {success && (
             <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6">
-              Restaurant created successfully! Redirecting to dashboard...
+              Restaurant created successfully! Redirecting to admin panel...
             </div>
           )}
           

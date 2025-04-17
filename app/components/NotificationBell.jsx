@@ -93,7 +93,7 @@ export default function NotificationBell() {
   
   // Handle click on an order
   const handleOrderClick = (orderId) => {
-    router.push(`/restaurant-admin/orders/${orderId}`);
+    router.push(`/restaurant/orders/${orderId}`);
     setShowDropdown(false);
   };
   
@@ -182,7 +182,7 @@ export default function NotificationBell() {
                 
                 <div className="px-4 py-2 text-center">
                   <button
-                    onClick={() => router.push('/restaurant-admin/orders')}
+                    onClick={() => router.push('/restaurant/orders')}
                     className="text-xs text-blue-600 hover:text-blue-800"
                   >
                     View all orders

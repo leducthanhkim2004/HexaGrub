@@ -143,10 +143,10 @@ export default function RestaurantOrdersPage() {
           <div className="flex justify-between items-center mb-8">
             <h1 className="text-3xl font-bold text-black">Manage Orders</h1>
             <button
-              onClick={() => router.push('/restaurant/dashboard')}
+              onClick={() => router.push('/restaurant-admin')}
               className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700"
             >
-              Back to Dashboard
+              Back to Admin
             </button>
           </div>
 
