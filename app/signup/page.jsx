@@ -27,13 +27,14 @@ export default function Signup() {
     setLoading(true);
 
     try {
-      // Sign up the user
+      // Sign up the user with role in metadata
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
-            full_name: fullName
+            full_name: fullName,
+            role: role // Include role in metadata
           }
         }
       });
@@ -44,22 +45,8 @@ export default function Signup() {
         throw new Error('Failed to create user');
       }
 
-      // Create a profile record
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert([
-          {
-            id: authData.user.id,
-            full_name: fullName,
-            email: email,
-            role: role
-          }
-        ]);
-
-      if (profileError) {
-        console.error('Error creating profile:', profileError);
-        throw new Error('Failed to create user profile');
-      }
+      // Show success message
+      alert('Please check your email to confirm your account before logging in.');
 
       // If they're a restaurant owner, redirect them to create restaurant page
       if (role === 'restaurant_owner') {

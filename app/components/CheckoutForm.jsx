@@ -47,10 +47,10 @@ export default function CheckoutForm({ onClose }) {
       const order = await orderService.createOrder(orderData);
       
       if (order) {
-        // Clear the cart and close the sidebar
-        clearCart();
-        onClose();
-        
+      // Clear the cart and close the sidebar
+      clearCart();
+      onClose();
+      
         // Redirect to orders page
         router.push('/orders');
       }

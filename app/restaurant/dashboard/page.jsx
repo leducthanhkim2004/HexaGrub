@@ -36,6 +36,7 @@ export default function RestaurantDashboard() {
         if (profileError) throw profileError;
 
         if (!profile.restaurant_id) {
+          console.log('No restaurant found, redirecting to create page');
           router.push('/restaurant/create');
           return;
         }

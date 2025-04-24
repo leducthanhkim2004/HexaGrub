@@ -12,9 +12,9 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body className={inter.className}>
         <AuthProvider>
-          <CartProvider>
-            {children}
-          </CartProvider>
+        <CartProvider>
+          {children}
+        </CartProvider>
         </AuthProvider>
       </body>
     </html>
