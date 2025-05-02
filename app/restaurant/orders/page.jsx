@@ -107,6 +107,41 @@ export default function RestaurantOrdersPage() {
     }
   };
 
+  const handleDeleteOrder = async (orderId) => {
+    if (!window.confirm('Are you sure you want to delete this order?')) {
+      return;
+    }
+
+    try {
+      setError(null);
+      
+      // First check if the order is still pending
+      const { data: order, error: checkError } = await supabase
+        .from('orders')
+        .select('status')
+        .eq('id', orderId)
+        .single();
+
+      if (checkError) throw checkError;
+      
+      if (order.status !== 'pending') {
+        throw new Error('Only pending orders can be deleted');
+      }
+
+      // Call the delete_order function
+      const { error: deleteError } = await supabase
+        .rpc('delete_order', { order_id: orderId });
+
+      if (deleteError) throw deleteError;
+
+      // Update the local state
+      setOrders(orders.filter(order => order.id !== orderId));
+    } catch (error) {
+      console.error('Error deleting order:', error);
+      setError(error.message);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-white">
@@ -171,6 +206,9 @@ export default function RestaurantOrdersPage() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Status
                     </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -203,6 +241,18 @@ export default function RestaurantOrdersPage() {
                             'bg-red-100 text-red-800'}`}>
                           {order.status}
                         </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center space-x-2">
+                          {order.status === 'pending' && (
+                            <button
+                              onClick={() => handleDeleteOrder(order.id)}
+                              className="text-red-600 hover:text-red-900 text-sm font-medium"
+                            >
+                              Delete
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}

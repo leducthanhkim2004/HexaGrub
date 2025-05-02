@@ -180,8 +180,7 @@ export default function NotificationBell() {
                 {newOrders.map(order => (
                   <div 
                     key={order.id}
-                    className="px-4 py-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer"
-                    onClick={() => handleOrderClick(order.id)}
+                    className="px-4 py-3 border-b border-gray-100"
                   >
                     <div className="flex justify-between items-start">
                       <div>
