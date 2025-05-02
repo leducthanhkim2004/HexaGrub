@@ -46,8 +46,8 @@ This repository contains a web application designed for **ordering food online**
 Clone repository and install dependencies:
 
 ```bash
-git clone <https://github.com/leducthanhkim2004/HexaGrub.git>
-cd <HexaGrub>
+git clone https://github.com/leducthanhkim2004/HexaGrub.git
+cd HexaGrub
 npm install
 ```
 Pass Api Key 
