@@ -1,10 +1,11 @@
 'use client';
 
-import React from 'react';
+import React, { Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 
-export default function PaymentFailedPage() {
+// Separate component that uses useSearchParams
+function PaymentFailedContent() {
   const searchParams = useSearchParams();
   const error = searchParams.get('error');
   const reason = searchParams.get('reason');
@@ -40,8 +41,18 @@ export default function PaymentFailedPage() {
             Payment Failed
           </h2>
           <p className="mt-2 text-sm text-gray-600">
-            There was a problem processing your payment. Please try again.
+            {error ? getErrorMessage() : 'There was a problem processing your payment. Please try again.'}
           </p>
+          {reason && (
+            <p className="mt-1 text-sm text-gray-500">
+              Reason: {reason}
+            </p>
+          )}
+          {details && (
+            <p className="mt-1 text-sm text-gray-500">
+              Details: {details}
+            </p>
+          )}
         </div>
         <div className="mt-8">
           <Link 
@@ -60,4 +71,20 @@ export default function PaymentFailedPage() {
       </div>
     </div>
   );
-} 
+}
+
+// Main component with Suspense boundary
+export default function PaymentFailedPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading payment information...</p>
+        </div>
+      </div>
+    }>
+      <PaymentFailedContent />
+    </Suspense>
+  );
+}

@@ -1,48 +1,102 @@
 'use client';
 
-import React from 'react';
-import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
+import Header from '../../components/Header';
+import Link from 'next/link';
 
-export default function PaymentSuccessPage() {
+// Extract the component that uses useSearchParams
+function PaymentSuccessContent() {
   const searchParams = useSearchParams();
-  const vnp_Amount = searchParams.get('vnp_Amount');
-  const vnp_BankCode = searchParams.get('vnp_BankCode');
-  const vnp_PayDate = searchParams.get('vnp_PayDate');
-  const vnp_OrderInfo = searchParams.get('vnp_OrderInfo');
-  const vnp_TransactionNo = searchParams.get('vnp_TransactionNo');
-
+  
+  // Extract information from search params
+  const orderId = searchParams.get('orderId');
+  const amount = searchParams.get('amount');
+  const vnpTxnRef = searchParams.get('vnp_TxnRef');
+  const paymentDate = searchParams.get('date');
+  
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="max-w-md w-full p-6 bg-white rounded-lg shadow-lg">
+    <div className="min-h-screen bg-gray-100 py-12">
+      <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-md p-8">
         <div className="text-center">
-          <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
-            <svg className="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
             </svg>
           </div>
-          <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
-            Payment Successful!
-          </h2>
-          <p className="mt-2 text-sm text-gray-600">
-            Your payment has been processed successfully.
+          <h1 className="text-2xl font-bold text-gray-800 mb-4">Payment Successful!</h1>
+          <p className="text-gray-600 mb-8">
+            Your payment has been processed successfully. Thank you for your order.
           </p>
-        </div>
-        <div className="mt-8">
-          <Link 
-            href="/orders"
-            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-          >
-            View Orders
-          </Link>
-          <Link 
-            href="/"
-            className="mt-4 w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-          >
-            Continue Shopping
-          </Link>
+          
+          {/* Payment details section */}
+          <div className="border-t border-gray-200 pt-6 pb-4">
+            <h2 className="text-lg font-semibold text-gray-700 mb-4">Payment Details</h2>
+            <div className="grid grid-cols-1 gap-2 text-left max-w-md mx-auto">
+              {orderId && (
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Order ID:</span>
+                  <span className="text-gray-800 font-medium">{orderId}</span>
+                </div>
+              )}
+              
+              {vnpTxnRef && (
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Transaction Reference:</span>
+                  <span className="text-gray-800 font-medium">{vnpTxnRef}</span>
+                </div>
+              )}
+              
+              {amount && (
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Amount Paid:</span>
+                  <span className="text-gray-800 font-medium">
+                    {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount)}
+                  </span>
+                </div>
+              )}
+              
+              {paymentDate && (
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Payment Date:</span>
+                  <span className="text-gray-800 font-medium">{paymentDate}</span>
+                </div>
+              )}
+            </div>
+          </div>
+          
+          {/* Action buttons */}
+          <div className="mt-8 space-y-3">
+            <Link href="/orders" className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-md transition duration-300">
+              View My Orders
+            </Link>
+            <div className="block">
+              <Link href="/" className="inline-block text-blue-600 hover:text-blue-800 font-medium transition duration-300">
+                Return to Home
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   );
-} 
+}
+
+// Main component with Suspense boundary
+export default function PaymentSuccessPage() {
+  return (
+    <>
+      <Header />
+      <Suspense fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading payment details...</p>
+          </div>
+        </div>
+      }>
+        <PaymentSuccessContent />
+      </Suspense>
+    </>
+  );
+}
