@@ -26,10 +26,10 @@ This repository contains a web application designed for **ordering food online**
 
 ## 🛠️ Technology Stack
 
-- **Frontend:** React / Next.js, HTML, CSS, JavaScript
-- **Backend:** Node.js / Express.js
-- **Database:** PostgreSQL / MySQL
-- **Deployment:** Docker, Docker Hub, Azure/DigitalOcean
+- **Frontend:** React / Next.js
+- **Backend:** Node.js 
+- **Database:** Supabase service 
+- **Deployment:** Docker, Docker Hub,render for web hosting 
 
 ---
 
@@ -138,7 +138,7 @@ The deployed application is accessible online at:
 
 ## 📚 Documentation & Support
 - For assistance, feel free to open an issue in this repository or contact the project maintainers.
-
+- Our product is in progress for developing and we will release all documents in a near future
 ---
 
 **Happy coding! 🚀**
