@@ -21,7 +21,7 @@ This repository contains a web application designed for **ordering food online**
 
 - 📊 **Admin Dashboard**
   - Manage menus, orders, users, and view sales statistics.
-
+  - Restaurant owner can add food items and update food images easily.
 ---
 
 ## 🛠️ Technology Stack
