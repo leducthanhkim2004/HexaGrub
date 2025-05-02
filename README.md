@@ -1,36 +1,144 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
-## Getting Started
+# 🍕 Food Ordering & Restaurant Management System
 
-First, run the development server:
+This repository contains a web application designed for **ordering food online** and **restaurant order management**. It includes features such as user authentication, menu browsing, placing orders, online payments, and real-time order tracking.
+
+---
+
+## 🚀 Features
+
+- ✅ **User Management**
+  - Register, login, and manage user profiles securely.
+
+- 📖 **Food Ordering**
+  - Browse available menus, customize orders, and complete checkouts.
+
+- 🗃️ **Order Management**
+  - Monitor the status of orders: placed, preparing, and completed.
+
+- 💳 **Payment Integration**
+  - Secure online payments with integrated payment gateways.
+
+- 📊 **Admin Dashboard**
+  - Manage menus, orders, users, and view sales statistics.
+
+---
+
+## 🛠️ Technology Stack
+
+- **Frontend:** React / Next.js, HTML, CSS, JavaScript
+- **Backend:** Node.js / Express.js
+- **Database:** PostgreSQL / MySQL
+- **Deployment:** Docker, Docker Hub, Azure/DigitalOcean
+
+---
+
+## ⚙️ Development Setup
+
+### 📌 **Prerequisites**
+
+- [Node.js](https://nodejs.org/) (≥ 18.x recommended)
+- [npm](https://npmjs.com/) (included with Node.js)
+- [Docker](https://www.docker.com/) (for containerization)
+
+### 💻 **Installation & Running in Dev Mode**
+
+Clone repository and install dependencies:
+
+```bash
+git clone <https://github.com/leducthanhkim2004/HexaGrub.git>
+cd <HexaGrub>
+npm install
+```
+Pass Api Key 
+```bash
+NEXT_PUBLIC_SUPABASE_URL=YOUR_SUPABASE_URL
+NEXT_PUBLIC_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
+SUPABASE_SERVICE_ROLE_KEY=YOUR_SERVICE_ROLE_KEY
+
+VNPAY_TMN_CODE=YOUR_TMN-CODE
+VNPAY_HASH_SECRET=YOUR_HASH_SECRET
+VNPAY_URL=YOUR_VNPAY_URL
+VNPAY_RETURN_URL=YOUR_RETURN-URL
+    
+```
+Run development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The app runs at:  
+👉 [http://localhost:3000](http://localhost:3000)
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+## 🚦 Production Setup
 
-## Learn More
+### 🏗️ **Building the Application**
 
-To learn more about Next.js, take a look at the following resources:
+Build optimized app:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm run build
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+Start production server:
 
-## Deploy on Vercel
+```bash
+npm run start
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Our app runs at:  
+👉 [http://localhost:3000](http://localhost:3000)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+---
+
+## 📦 Docker Deployment
+
+### 🛠️ **Dockerfile Included**
+
+We have included a `Dockerfile` in this repository to streamline containerization.
+
+### 🐳 **Build Docker Image**
+
+Run this bash for container:
+
+```bash
+docker build -t restaurant-app -f restaurant.dockerfile .
+
+```
+
+### ▶️ **Run Docker Container**
+
+Start your Docker container on port `3000`:
+
+```bash
+docker run -p 3000:3000 restaurant-app
+```
+
+Check the application at:  
+👉 [http://localhost:3000](http://localhost:3000)
+
+### 📌 **Docker Hub**
+
+Docker image available on Docker Hub:  
+👉 [https://hub.docker.com/r/10422105/hexagrub](https://hub.docker.com/r/10422105/hexagrub)
+
+---
+
+## 🌐 Website URL
+
+The deployed application is accessible online at:
+
+👉 [https://hexagrub-vgu.onrender.com](https://hexagrub-vgu.onrender.com)
+
+---
+---
+
+## 📚 Documentation & Support
+- For assistance, feel free to open an issue in this repository or contact the project maintainers.
+
+---
+
+**Happy coding! 🚀**
