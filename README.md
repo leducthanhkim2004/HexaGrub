@@ -131,7 +131,7 @@ Docker image available on Docker Hub:
 
 The deployed application is accessible online at:
 
-👉 [https://hexagrub-vgu.onrender.com](https://hexagrub-vgu.onrender.com)
+👉 [https://hexagrub.onrender.com/](https://hexagrub.onrender.com/)
 
 ---
 ---
