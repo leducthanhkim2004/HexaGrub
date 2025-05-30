@@ -7,7 +7,7 @@ import Header from '../../components/Header';
 import Image from 'next/image';
 import ReactCrop from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
-import { supabase } from '../../lib/supabase';
+import { supabase } from '@/utils/supabase/client';
 import { useAuth } from '../../context/AuthContext';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';

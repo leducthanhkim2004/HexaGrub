@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useCart } from '../context/CartContext';
 import CartSidebar from './CartSidebar';
 import NotificationBell from './NotificationBell';
-import { supabase } from '../lib/supabase';
+import { supabase } from '@/utils/supabase/client';
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';

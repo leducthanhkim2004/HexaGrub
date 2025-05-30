@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase } from '@/utils/supabase/client';
 
 export default function OrderHistory({ userId }) {
   const [orders, setOrders] = useState([]);

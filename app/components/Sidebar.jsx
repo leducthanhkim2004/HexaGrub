@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { supabase } from '../lib/supabase';
+import { supabase } from '@/utils/supabase/client';
 
 export default function Sidebar() {
   const router = useRouter();

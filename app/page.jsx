@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from 'next/navigation';
 import { restaurantService } from './services/restaurantService';
-import { supabase } from '../utils/supabase/client';
+import { supabase } from '@/utils/supabase/client';
 import Header from "./components/Header";
 import Link from 'next/link';
 import CartSidebar from './components/CartSidebar';

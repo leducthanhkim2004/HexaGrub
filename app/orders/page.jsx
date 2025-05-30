@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { supabase } from '../lib/supabase';
+import { supabase } from '@/utils/supabase/client';
 import PaymentButton from '../components/PaymentButton';
 import { useAuth } from '../context/AuthContext';
 import Header from '../components/Header';

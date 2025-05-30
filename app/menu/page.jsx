@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../../utils/supabase/client';
+import { supabase } from '@/utils/supabase/client';
 import Header from '../components/Header';
 import CartSidebar from '../components/CartSidebar';
 

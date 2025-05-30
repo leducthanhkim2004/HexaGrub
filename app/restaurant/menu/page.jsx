@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { restaurantService } from '../../services/restaurantService';
 import { menuService } from '../../services/menuService';
 import { useAuth } from '../../context/AuthContext';
-import { supabase } from '../../lib/supabase';
+import { supabase } from '@/utils/supabase/client';
 import Header from '../../components/Header';
 
 export default function RestaurantMenuPage() {

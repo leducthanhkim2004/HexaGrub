@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '../lib/supabase';
+import { supabase } from '@/utils/supabase/client';
 import { useAuth } from '../context/AuthContext';
 
 export default function NotificationBell() {

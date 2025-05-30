@@ -29,6 +29,7 @@
     "react-social-login-buttons": "^4.1.1",
     "react-toastify": "^11.0.5",
     "selenium-webdriver": "^4.31.0",
+    "supabase": "^2.23.4",
     "vnpay": "^2.2.0",
     "zod": "^3.24.3"
   },
