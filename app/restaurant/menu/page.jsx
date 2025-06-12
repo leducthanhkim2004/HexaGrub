@@ -27,6 +27,9 @@ export default function RestaurantMenuPage() {
     new_image_url: '',
     is_available: true
   });
+  const [showPriceHistory, setShowPriceHistory] = useState(false);
+  const [priceHistory, setPriceHistory] = useState([]);
+  const [selectedMenuItem, setSelectedMenuItem] = useState(null);
   const router = useRouter();
   const { user } = useAuth();
 
@@ -268,6 +271,24 @@ export default function RestaurantMenuPage() {
     setUploadedFiles([]);
   };
 
+  const handleViewPriceHistory = async (item) => {
+    setSelectedMenuItem(item);
+    setShowPriceHistory(true);
+    setPriceHistory([]);
+    try {
+      const history = await menuService.getPriceHistory(item.id);
+      setPriceHistory(history);
+    } catch (err) {
+      setPriceHistory([]);
+    }
+  };
+
+  const handleClosePriceHistory = () => {
+    setShowPriceHistory(false);
+    setSelectedMenuItem(null);
+    setPriceHistory([]);
+  };
+
   if (loading && !restaurant) {
     return (
       <div className="min-h-screen bg-gray-100">
@@ -507,6 +528,12 @@ export default function RestaurantMenuPage() {
                       >
                         Delete
                       </button>
+                      <button
+                        onClick={() => handleViewPriceHistory(item)}
+                        className="px-4 py-2 text-gray-600 font-medium hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors"
+                      >
+                        Price History
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -514,6 +541,43 @@ export default function RestaurantMenuPage() {
             </div>
           )}
         </div>
+
+        {/* Price History Modal */}
+        {showPriceHistory && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+            <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-lg relative">
+              <button
+                onClick={handleClosePriceHistory}
+                className="absolute top-2 right-2 text-gray-500 hover:text-gray-800 text-2xl font-bold"
+              >
+                ×
+              </button>
+              <h2 className="text-xl font-bold mb-4">Price History for {selectedMenuItem?.name}</h2>
+              {priceHistory.length === 0 ? (
+                <div className="text-gray-500">No price changes recorded.</div>
+              ) : (
+                <table className="w-full text-left border">
+                  <thead>
+                    <tr>
+                      <th className="py-2 px-3 border-b">Old Price</th>
+                      <th className="py-2 px-3 border-b">New Price</th>
+                      <th className="py-2 px-3 border-b">Changed At</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {priceHistory.map((row, idx) => (
+                      <tr key={idx}>
+                        <td className="py-2 px-3 border-b">${parseFloat(row.old_price).toFixed(2)}</td>
+                        <td className="py-2 px-3 border-b">${parseFloat(row.new_price).toFixed(2)}</td>
+                        <td className="py-2 px-3 border-b">{new Date(row.changed_at).toLocaleString()}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

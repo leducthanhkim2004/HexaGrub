@@ -175,5 +175,18 @@ export const menuService = {
     }
 
     return data;
+  },
+
+  async getPriceHistory(menuItemId) {
+    const { data, error } = await supabase
+      .from('menu_item_price_history')
+      .select('old_price, new_price, changed_at, changed_by')
+      .eq('menu_item_id', menuItemId)
+      .order('changed_at', { ascending: false });
+    if (error) {
+      console.error('Error fetching price history:', error);
+      return [];
+    }
+    return data || [];
   }
 } 
