@@ -61,6 +61,12 @@ export default function OrdersPage() {
           *,
           restaurant:restaurant_id (
             name
+          ),
+          order_items (
+            *,
+            menu_items (
+              name
+            )
           )
         `)
         .eq('profile_id', user.id)
@@ -198,6 +204,23 @@ export default function OrdersPage() {
                     </div>
 
                     <div className="border-t border-gray-200 pt-4">
+                      <div className="mb-2">
+                        <span className="font-semibold text-gray-700">Items:</span>
+                        <div className="ml-2">
+                          {order.order_items && order.order_items.length > 0 ? (
+                            order.order_items.map((item) => (
+                              <div key={item.id}>
+                                {item.quantity}x {item.menu_items?.name || item.item_name || 'Item'} (${parseFloat(item.price_at_time).toFixed(2)})
+                              </div>
+                            ))
+                          ) : (
+                            <span className="text-gray-400">No items</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="border-t border-gray-200 pt-4">
                       <div className="flex justify-between items-center">
                         <div>
                           <p className="text-gray-600">Total Amount</p>
@@ -249,6 +272,23 @@ export default function OrdersPage() {
                         </p>
                       </div>
                       {getStatusBadge(order.status)}
+                    </div>
+
+                    <div className="border-t border-gray-200 pt-4">
+                      <div className="mb-2">
+                        <span className="font-semibold text-gray-700">Items:</span>
+                        <div className="ml-2">
+                          {order.order_items && order.order_items.length > 0 ? (
+                            order.order_items.map((item) => (
+                              <div key={item.id}>
+                                {item.quantity}x {item.menu_items?.name || item.item_name || 'Item'} (${parseFloat(item.price_at_time).toFixed(2)})
+                              </div>
+                            ))
+                          ) : (
+                            <span className="text-gray-400">No items</span>
+                          )}
+                        </div>
+                      </div>
                     </div>
 
                     <div className="border-t border-gray-200 pt-4">

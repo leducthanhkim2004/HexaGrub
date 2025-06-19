@@ -87,6 +87,12 @@ export default function RestaurantOrdersPage() {
           ),
           restaurant:restaurant_id (
             name
+          ),
+          order_items (
+            *,
+            menu_items (
+              name
+            )
           )
         `)
         .eq('restaurant_id', profile.restaurant_id)
@@ -97,7 +103,7 @@ export default function RestaurantOrdersPage() {
         throw ordersError;
       }
 
-      console.log('Fetched orders:', ordersData);
+      console.log('Fetched orders:', JSON.stringify(ordersData, null, 2));
       setOrders(ordersData || []);
     } catch (error) {
       console.error('Error fetching orders:', error);
@@ -201,6 +207,9 @@ export default function RestaurantOrdersPage() {
                       Customer
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Items
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Total Amount
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -228,6 +237,22 @@ export default function RestaurantOrdersPage() {
                         {order.profiles.phone_number && (
                           <div className="text-sm text-gray-500">{order.profiles.phone_number}</div>
                         )}
+                        <div className="text-sm text-gray-500 mt-1">
+                          {order.delivery_address || <span className="text-gray-400">N/A</span>}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900 space-y-1">
+                          {order.order_items && order.order_items.length > 0 ? (
+                            order.order_items.map((item) => (
+                              <div key={item.id}>
+                                {item.quantity}x {item.menu_items?.name || item.item_name || 'Item'} (${parseFloat(item.price_at_time).toFixed(2)})
+                              </div>
+                            ))
+                          ) : (
+                            <span className="text-gray-400">No items</span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">
